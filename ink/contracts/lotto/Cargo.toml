@@ -1,5 +1,5 @@
 [package]
-name = "raffle_consumer"
+name = "lotto_contract"
 version = "1.0.1"
 authors = ["guigou"]
 edition = "2021"
@@ -9,10 +9,8 @@ ink = { version = "4.3.0", default-features = false}
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 openbrush = { version = "4.0.0-beta", git = "https://github.com/Brushfam/openbrush-contracts", default-features = false, features = ["ownable", "access_control", "upgradeable"] }
-lucky = { path = "../../logics", default-features = false }
-reward_manager = { path = "../reward_manager", default-features = false, features = ["ink-as-dependency"] }
-dapps_staking_developer = { path = "../dapps_staking_developer", default-features = false, features = ["ink-as-dependency"] }
 phat_rollup_anchor_ink = { git = "https://github.com/GuiGou12358/phat-offchain-rollup" , default-features = false}
+lotto = { path = "../../logics", default-features = false }
 
 [lib]
 path = "lib.rs"
@@ -24,10 +22,8 @@ std = [
     "scale/std",
     "scale-info/std",
     "openbrush/std",
-    "lucky/std",
-    "reward_manager/std",
-    "dapps_staking_developer/std",
     "phat_rollup_anchor_ink/std",
+    #"lucky/std",
 ]
 ink-as-dependency = []
 
