@@ -26,7 +26,7 @@ pub trait RaffleConfig: Storage<Data> + access_control::Internal {
     #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
     fn set_config(&mut self, config: Config) -> Result<(), RaffleError> {
         // check the config
-        if config.nb_numbers > 0 {
+        if config.nb_numbers == 0 {
             return Err(IncorrectConfig);
         }
 
