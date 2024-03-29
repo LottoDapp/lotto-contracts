@@ -23,7 +23,7 @@ std = [
     "scale-info/std",
     "openbrush/std",
     "phat_rollup_anchor_ink/std",
-    #"lucky/std",
+    "lotto/std",
 ]
 ink-as-dependency = []
 

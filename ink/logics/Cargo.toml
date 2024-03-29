@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 ink = { version = "4.3.0", default-features = false}
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2.9.0", default-features = false, features = ["derive"], optional = true }
+scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 openbrush = { version = "4.0.0-beta", git = "https://github.com/Brushfam/openbrush-contracts", default-features = false, features = ["access_control"]}
 
 #phat_rollup_anchor_ink = { git = "https://github.com/GuiGou12358/phat-offchain-rollup" , default-features = false}

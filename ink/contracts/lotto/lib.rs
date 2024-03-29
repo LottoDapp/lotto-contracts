@@ -5,7 +5,6 @@
 pub mod lotto_contract {
 
     use ink::codegen::{EmitEvent, Env};
-    use ink::env::call::{ExecutionInput, Selector};
     use ink::prelude::vec::Vec;
     use openbrush::contracts::access_control::*;
     use openbrush::contracts::ownable::*;
@@ -91,11 +90,13 @@ pub mod lotto_contract {
     }
 
     /// convertor from RaffleError to ContractError
+
     impl From<RaffleError> for ContractError {
         fn from(error: RaffleError) -> Self {
             ContractError::RaffleError(error)
         }
     }
+
 
     /// convertor from RaffleError to ContractError
     impl From<ContractError> for RollupAnchorError {
@@ -127,6 +128,8 @@ pub mod lotto_contract {
 
     impl RaffleConfig for Contract {}
     impl Raffle for Contract {}
+
+
     impl RollupAnchor for Contract {}
     impl MetaTransaction for Contract {}
     impl JsRollupAnchor for Contract {}
@@ -156,6 +159,17 @@ pub mod lotto_contract {
         pub fn get_manager_role(&self) -> RoleType {
             LOTTO_MANAGER_ROLE
         }
+
+        #[ink(message)]
+        pub fn participate(&mut self, numbers: Vec<u8>) -> Result<(), ContractError> {
+            // check if the numbers are correct
+            self.check_numbers(&numbers)?;
+            // register the participation
+            self.inner_participate(numbers)?;
+
+            Ok(())
+        }
+
     }
 
     #[derive(scale::Encode, scale::Decode)]
@@ -204,13 +218,35 @@ pub mod lotto_contract {
 
     impl raffle::Internal for Contract {
 
-        fn emit_participation(&self, num_raffle: u32, participant: AccountId, numbers: Vec<u8>){
-
+        fn emit_participation_registered(&self, num_raffle: u32, participant: AccountId, numbers: Vec<u8>){
+            // emit the event
+            self.env().emit_event(
+                ParticipationRegistered {
+                num_raffle,
+                participant,
+                numbers,
+                }
+            );
         }
-        fn emit_results(&self, num_raffle: u32, result: Vec<u8>){
 
+        fn emit_results(&self, num_raffle: u32, numbers: Vec<u8>){
+            // emit the event
+            self.env().emit_event(
+                ResultReceived {
+                    num_raffle,
+                    numbers,
+                }
+            );
         }
+
         fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>){
+            // emit the event
+            self.env().emit_event(
+                WinnersRevealed {
+                    num_raffle,
+                    winners,
+                }
+            );
 
         }
     }

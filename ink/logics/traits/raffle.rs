@@ -97,7 +97,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         let num_raffle = self.data::<Data>().current_raffle;
 
         // save the participant with an event
-        self.emit_participation(num_raffle, participant, numbers);
+        self.emit_participation_registered(num_raffle, participant, numbers);
 
         Ok(())
     }
@@ -105,7 +105,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
 
 #[openbrush::trait_definition]
 pub trait Internal {
-    fn emit_participation(&self, num_raffle: u32, participant: AccountId, numbers: Vec<u8>);
+    fn emit_participation_registered(&self, num_raffle: u32, participant: AccountId, numbers: Vec<u8>);
     fn emit_results(&self, num_raffle: u32, result: Vec<u8>);
     fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>);
 }

@@ -13,7 +13,7 @@ pub struct Data {
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
 pub struct Config {
     nb_numbers: u8,
     min_number: u8,
@@ -51,7 +51,7 @@ pub trait RaffleConfig: Storage<Data> + access_control::Internal {
         }
     }
 
-    fn check_numbers(&mut self, numbers: Vec<u8>) -> Result<(), RaffleError> {
+    fn check_numbers(&mut self, numbers: &Vec<u8>) -> Result<(), RaffleError> {
         // check if the config is set
         let config = self.ensure_config()?;
 
