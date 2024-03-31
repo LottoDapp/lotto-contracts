@@ -10,15 +10,12 @@ pub mod lotto_contract {
     use openbrush::contracts::ownable::*;
     use openbrush::{modifiers, traits::Storage};
 
-    use lotto::traits::{
-        error::*, config, config::*, raffle, raffle::*, LOTTO_MANAGER_ROLE,
-    };
+    use lotto::traits::{config, config::*, error::*, raffle, raffle::*, LOTTO_MANAGER_ROLE, NUMBER};
 
     use lotto::traits::config::Config;
 
     use ::lotto::traits::error::RaffleError;
     use ::lotto::traits::raffle::Raffle;
-
 
     use phat_rollup_anchor_ink::traits::{
         js_rollup_anchor, js_rollup_anchor::*, meta_transaction, meta_transaction::*,
@@ -32,7 +29,7 @@ pub mod lotto_contract {
         num_raffle: u32,
         #[ink(topic)]
         participant: AccountId,
-        numbers: Vec<u8>,
+        numbers: Vec<NUMBER>,
     }
 
     /// Event emitted when the raffle is started
@@ -54,7 +51,7 @@ pub mod lotto_contract {
     pub struct ResultReceived {
         #[ink(topic)]
         num_raffle: u32,
-        numbers: Vec<u8>,
+        numbers: Vec<NUMBER>,
     }
 
     /// Event emitted when the winners are revealed
@@ -71,7 +68,7 @@ pub mod lotto_contract {
         #[ink(topic)]
         num_raffle: u32,
         /// error
-        error: Vec<u8>,
+        error: Vec<NUMBER>,
     }
 
     /// Errors occurred in the contract
@@ -96,7 +93,6 @@ pub mod lotto_contract {
             ContractError::RaffleError(error)
         }
     }
-
 
     /// convertor from RaffleError to ContractError
     impl From<ContractError> for RollupAnchorError {
@@ -129,7 +125,6 @@ pub mod lotto_contract {
     impl RaffleConfig for Contract {}
     impl Raffle for Contract {}
 
-
     impl RollupAnchor for Contract {}
     impl MetaTransaction for Contract {}
     impl JsRollupAnchor for Contract {}
@@ -161,12 +156,33 @@ pub mod lotto_contract {
         }
 
         #[ink(message)]
-        pub fn participate(&mut self, numbers: Vec<u8>) -> Result<(), ContractError> {
+        pub fn participate(&mut self, numbers: Vec<NUMBER>) -> Result<(), ContractError> {
             // check if the numbers are correct
             self.check_numbers(&numbers)?;
             // register the participation
             self.inner_participate(numbers)?;
 
+            Ok(())
+        }
+
+        ///
+        /// ONLY FOR TEST
+        ///
+        #[ink(message)]
+        pub fn test_set_results(&mut self, num_raffle: u32, numbers: Vec<NUMBER>) -> Result<(), ContractError> {
+            // check if the numbers are correct
+            self.check_numbers(&numbers)?;
+            // set the results
+            self.inner_set_results(num_raffle, numbers)?;
+            Ok(())
+        }
+
+        ///
+        /// ONLY FOR TEST
+        ///
+        #[ink(message)]
+        pub fn test_set_winners(&mut self, num_raffle: u32, winners: Vec<AccountId>) -> Result<(), ContractError> {
+            self.inner_set_winners(num_raffle, winners)?;
             Ok(())
         }
 
@@ -217,40 +233,36 @@ pub mod lotto_contract {
     }
 
     impl raffle::Internal for Contract {
-
-        fn emit_participation_registered(&self, num_raffle: u32, participant: AccountId, numbers: Vec<u8>){
+        fn emit_participation_registered(
+            &self,
+            num_raffle: u32,
+            participant: AccountId,
+            numbers: Vec<NUMBER>,
+        ) {
             // emit the event
-            self.env().emit_event(
-                ParticipationRegistered {
+            self.env().emit_event(ParticipationRegistered {
                 num_raffle,
                 participant,
                 numbers,
-                }
-            );
+            });
         }
 
-        fn emit_results(&self, num_raffle: u32, numbers: Vec<u8>){
+        fn emit_results(&self, num_raffle: u32, numbers: Vec<NUMBER>) {
             // emit the event
-            self.env().emit_event(
-                ResultReceived {
-                    num_raffle,
-                    numbers,
-                }
-            );
+            self.env().emit_event(ResultReceived {
+                num_raffle,
+                numbers,
+            });
         }
 
-        fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>){
+        fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>) {
             // emit the event
-            self.env().emit_event(
-                WinnersRevealed {
-                    num_raffle,
-                    winners,
-                }
-            );
-
+            self.env().emit_event(WinnersRevealed {
+                num_raffle,
+                winners,
+            });
         }
     }
-
 
     impl rollup_anchor::EventBroadcaster for Contract {
         fn emit_event_message_queued(&self, _id: u32, _data: Vec<u8>) {

@@ -1,6 +1,6 @@
 use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
-use crate::traits::LOTTO_MANAGER_ROLE;
+use crate::traits::{LOTTO_MANAGER_ROLE, NUMBER};
 use ink::prelude::vec::Vec;
 use ink::storage::Mapping;
 use openbrush::contracts::access_control::access_control;
@@ -10,7 +10,7 @@ use openbrush::traits::{AccountId, Storage};
 #[openbrush::storage_item]
 pub struct Data {
     current_raffle: u32,
-    results: Mapping<u32, Vec<u8>>,
+    results: Mapping<u32, Vec<NUMBER>>,
     winners: Mapping<u32, Vec<AccountId>>,
 }
 
@@ -47,7 +47,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
     }
 
     #[ink(message)]
-    fn get_results(&self, num_raffle: u32) -> Option<Vec<u8>> {
+    fn get_results(&self, num_raffle: u32) -> Option<Vec<NUMBER>> {
         self.data::<Data>().results.get(num_raffle)
     }
 
@@ -56,7 +56,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         self.data::<Data>().winners.get(num_raffle)
     }
 
-    fn inner_set_results(&mut self, num_raffle: u32, results: Vec<u8>) -> Result<(), RaffleError> {
+    fn inner_set_results(&mut self, num_raffle: u32, results: Vec<NUMBER>) -> Result<(), RaffleError> {
         // TODO check if the raffle exists and it's stopped
 
         match self.data::<Data>().results.get(num_raffle) {
@@ -90,7 +90,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         }
     }
 
-    fn inner_participate(&mut self, numbers: Vec<u8>) -> Result<(), RaffleError> {
+    fn inner_participate(&mut self, numbers: Vec<NUMBER>) -> Result<(), RaffleError> {
         // TODO check if a raffle is started
 
         let participant = Self::env().caller();
@@ -105,7 +105,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
 
 #[openbrush::trait_definition]
 pub trait Internal {
-    fn emit_participation_registered(&self, num_raffle: u32, participant: AccountId, numbers: Vec<u8>);
-    fn emit_results(&self, num_raffle: u32, result: Vec<u8>);
+    fn emit_participation_registered(&self, num_raffle: u32, participant: AccountId, numbers: Vec<NUMBER>);
+    fn emit_results(&self, num_raffle: u32, result: Vec<NUMBER>);
     fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>);
 }
