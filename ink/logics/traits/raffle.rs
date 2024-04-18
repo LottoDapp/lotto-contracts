@@ -56,15 +56,6 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
     }
 
     #[ink(message)]
-    #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
-    fn delete_raffle(&mut self, num_raffle: u32) -> Result<(), RaffleError> {
-        // TODO check if the raffle is not the current one
-
-        self.data::<Data>().results.remove(num_raffle);
-        Ok(())
-    }
-
-    #[ink(message)]
     fn get_current_raffle(&self) -> u32 {
         self.data::<Data>().current_raffle
     }
