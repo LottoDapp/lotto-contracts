@@ -13,31 +13,23 @@ ink = { version = "4.2.0", default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
+
 serde = { version = "1.0.171", default-features = false, features = ["derive", "alloc"]}
-fixed = { version = "1", default-features = false, features = ["serde"] }
 serde-json-core = { version = "0.4.0" }
+
 sp-core = { version = "30", default-features = false, features = ["serde"]}
 
 pink-extension = { version = "0.4.2", default-features = false }
-pink-json = { git = "https://github.com/Phala-Network/pink-json.git", branch = "pink", default-features = false, features = ["de-number-as-str"] }
-pink-web3 = { version = "0.20.2", default-features = false, features = ["pink", "signing"] }
-
 phat_offchain_rollup = { git = "https://github.com/Phala-Network/phat-offchain-rollup" , default-features = false, features = ["ink"] }
-
-subrpc = { package = "pink-subrpc", version = "0.4.2", default-features = false }
-hex = { version = "0.4", default-features = false }
-
-phat_js = { version = "0.1.1", default-features = false }
-log = "0.4.20"
 
 [dev-dependencies]
 dotenvy = "0.15"
 env_logger = "0.10.0"
 pink-extension-runtime = { version = "0.4.2", default-features = false }
 hex-literal = "0.4.1"
+hex = { version = "0.4", default-features = false }
 
 [build-dependencies]
-half = { version = "=2.2.1", default-features = false }
 
 [lib]
 path = "lib.rs"
@@ -50,10 +42,6 @@ std = [
     "scale-info/std",
     "phat_offchain_rollup/std",
     "pink-extension/std",
-    "subrpc/std",
-    "pink-json/std",
-    "pink-web3/std",
-    "phat_js/std",
     "serde-json-core/std",
     "sp-core/std",
 ]

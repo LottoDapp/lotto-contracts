@@ -15,11 +15,3 @@ The `raffle` phat contract:
 - sends the output to `raffle_consumer` contract.
 
 More information [here](contracts/raffle)
-
-## Javascript/Typescript
-
-The business logic for the raffle is coded in the [raffle](js/src/raffle.ts) typescript.
-A javascript is generated from the typescript and provide to the `raffle` phat contract.
-This way, we separated the business logic (written in typescript) and the transport/communication layer provided by the `raffle` phat contract.
-
-

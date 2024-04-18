@@ -5,7 +5,6 @@ extern crate core;
 
 #[ink::contract(env = pink_extension::PinkEnvironment)]
 mod lotto_draw {
-    use crate::lotto_draw::Request::{CheckWinners, DrawNumbers};
     use alloc::vec::Vec;
     use ink::prelude::{format, string::String};
     use phat_offchain_rollup::clients::ink::{Action, ContractId, InkRollupClient};
@@ -14,31 +13,22 @@ mod lotto_draw {
     use scale::{Decode, Encode};
     use serde::Deserialize;
     use serde_json_core;
-    use sp_core::crypto::{AccountId32, Ss58AddressFormatRegistry, Ss58Codec};
+    use sp_core::crypto::{AccountId32, Ss58Codec};
 
-    const REQUEST_TYPE_DRAW_NUMBERS: u8 = 10;
-    const REQUEST_TYPE_CHECK_WINNERS: u8 = 11;
 
-    /// Type of response when the offchain rollup communicates with this contract
-    const RESPONSE_TYPE_ERROR: u8 = 0;
-    const RESPONSE_TYPE_DRAW_NUMBERS: u8 = 10;
-    const RESPONSE_TYPE_CHECK_WINNERS: u8 = 10;
+    pub type Number = u16;
 
-    pub type NUMBER = u16;
-
-    /// Message to request the lotto draw
+    /// Message to request the lotto lotto_draw or the list of winners
     /// message pushed in the queue by the Ink! smart contract and read by the offchain rollup
     #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(
         feature = "std",
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
-    pub struct LottoDrawRequestMessage {
-        /// Type of request
-        request_type: u8,
+    pub struct LottoRequestMessage {
         /// id of the requestor
         requestor_id: AccountId,
-        /// draw number
+        /// lotto_draw number
         draw_num: u32,
         /// request
         request: Request,
@@ -50,29 +40,37 @@ mod lotto_draw {
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
     pub enum Request {
-        /// request to draw the n number between min and max values
-        /// arg1: number of numbers for the draw
-        /// arg2:  smallest number for the draw
-        /// arg2:  biggest number for the draw
-        DrawNumbers(u8, NUMBER, NUMBER),
+        /// request to lotto_draw the n number between min and max values
+        /// arg1: number of numbers for the lotto_draw
+        /// arg2:  smallest number for the lotto_draw
+        /// arg2:  biggest number for the lotto_draw
+        DrawNumbers(u8, Number, Number),
         /// request to check if there is a winner for the given numbers
-        CheckWinners(Vec<NUMBER>),
+        CheckWinners(Vec<Number>),
     }
 
-    /// Message sent to provide a random value
+    /// Message sent to provide the lotto lotto_draw or the list of winners
     /// response pushed in the queue by the offchain rollup and read by the Ink! smart contract
     #[derive(Encode, Decode)]
-    struct LottoDrawResponseMessage {
-        /// Type of response
-        resp_type: u8,
+    struct LottoResponseMessage {
         /// initial request
-        request: LottoDrawRequestMessage,
-        /// numbers of the draw
-        numbers: Option<Vec<NUMBER>>,
-        /// winners
-        winners: Option<Vec<AccountId>>,
+        request: LottoRequestMessage,
+        /// response
+        response: Response,
+    }
+
+    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub enum Response {
+        /// list of numbers
+        Numbers(Vec<Number>),
+        /// list of winners
+        Winners(Vec<AccountId>),
         /// when an error occurs
-        error: Option<Vec<u8>>,
+        Error(Vec<u8>),
     }
 
     /// DTO use for serializing and deserializing the json
@@ -96,6 +94,7 @@ mod lotto_draw {
     }
 
     #[derive(Deserialize, Encode, Clone, Debug, PartialEq)]
+    #[allow(non_snake_case)]
     struct ParticipationNode<'a> {
         accountId: &'a str,
     }
@@ -127,7 +126,7 @@ mod lotto_draw {
         sender_key: Option<[u8; 32]>,
     }
 
-    #[derive(Encode, Decode, Debug)]
+    #[derive(Encode, Decode, Debug, PartialEq, Eq)]
     #[repr(u8)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ContractError {
@@ -138,21 +137,15 @@ mod lotto_draw {
         NoRequestInQueue,
         FailedToCreateClient,
         FailedToCommitTx,
-        HttpRequestFailed,
-        IndexerNotConfigured,
-        InvalidResponseBody,
-
-        FailedToGetStorage,
-        FailedToCreateTransaction,
-        FailedToSendTransaction,
-        FailedToGetBlockHash,
-        FailedToDecode,
-        InvalidRequest,
         FailedToCallRollup,
-
+        // error when checking the winners
+        NoNumber,
+        IndexerNotConfigured,
+        HttpRequestFailed,
+        InvalidResponseBody,
+        InvalidSs58Address,
+        // error when drawing the numbers
         MinGreaterThanMax,
-        DivByZero,
-        MulOverFlow,
         AddOverFlow,
         SubOverFlow,
     }
@@ -297,7 +290,7 @@ mod lotto_draw {
             let mut client = connect(config)?;
 
             // Get a request if presents
-            let request: LottoDrawRequestMessage = client
+            let request: LottoRequestMessage = client
                 .pop()
                 .log_err("answer_request: failed to read queue")?
                 .ok_or(ContractError::NoRequestInQueue)?;
@@ -309,12 +302,9 @@ mod lotto_draw {
             maybe_submit_tx(client, &self.attest_key, config.sender_key.as_ref())
         }
 
-        fn handle_request(
-            &self,
-            message: LottoDrawRequestMessage,
-        ) -> Result<LottoDrawResponseMessage> {
+        fn handle_request(&self, message: LottoRequestMessage) -> Result<LottoResponseMessage> {
             let response = match message.request {
-                DrawNumbers(nb_numbers, smallest_number, biggest_number) => {
+                Request::DrawNumbers(nb_numbers, smallest_number, biggest_number) => {
                     let result = self.inner_get_numbers(
                         message.requestor_id,
                         message.draw_num,
@@ -323,56 +313,35 @@ mod lotto_draw {
                         biggest_number,
                     );
                     match result {
-                        Ok(numbers) => LottoDrawResponseMessage {
-                            resp_type: RESPONSE_TYPE_DRAW_NUMBERS,
-                            request: message,
-                            numbers: Some(numbers),
-                            winners: None,
-                            error: None,
-                        },
-                        Err(e) => LottoDrawResponseMessage {
-                            resp_type: RESPONSE_TYPE_ERROR,
-                            request: message,
-                            numbers: None,
-                            winners: None,
-                            error: Some(e.encode()),
-                        },
+                        Ok(numbers) => Response::Numbers(numbers),
+                        Err(e) => Response::Error(e.encode()),
                     }
                 }
-                CheckWinners(ref numbers) => {
+                Request::CheckWinners(ref numbers) => {
                     let result = self.inner_get_winners(message.draw_num, numbers);
                     match result {
-                        Ok(winners) => LottoDrawResponseMessage {
-                            resp_type: RESPONSE_TYPE_CHECK_WINNERS,
-                            request: message,
-                            numbers: None,
-                            winners: Some(winners),
-                            error: None,
-                        },
-                        Err(e) => LottoDrawResponseMessage {
-                            resp_type: RESPONSE_TYPE_ERROR,
-                            request: message,
-                            numbers: None,
-                            winners: None,
-                            error: Some(e.encode()),
-                        },
+                        Ok(winners) => Response::Winners(winners),
+                        Err(e) => Response::Error(e.encode()),
                     }
                 }
             };
 
-            Ok(response)
+            Ok(LottoResponseMessage {
+                request: message,
+                response,
+            })
         }
 
-        /// Simulate and return numbers for the draw (admin only - for dev purpose)
+        /// Simulate and return numbers for the lotto_draw (admin only - for dev purpose)
         #[ink(message)]
         pub fn get_numbers(
             &self,
             requestor_id: AccountId,
             draw_num: u32,
             nb_numbers: u8,
-            smallest_number: NUMBER,
-            biggest_number: NUMBER,
-        ) -> Result<Vec<NUMBER>> {
+            smallest_number: Number,
+            biggest_number: Number,
+        ) -> Result<Vec<Number>> {
             self.ensure_owner()?;
             self.inner_get_numbers(
                 requestor_id,
@@ -388,18 +357,18 @@ mod lotto_draw {
             requestor_id: AccountId,
             draw_num: u32,
             nb_numbers: u8,
-            smallest_number: NUMBER,
-            biggest_number: NUMBER,
-        ) -> Result<Vec<NUMBER>> {
+            smallest_number: Number,
+            biggest_number: Number,
+        ) -> Result<Vec<Number>> {
             info!(
-                "Request received from requestor {requestor_id:?} / {draw_num} - draw {nb_numbers} numbers between {smallest_number} and {biggest_number}"
+                "Request received from requestor {requestor_id:?} / {draw_num} - lotto_draw {nb_numbers} numbers between {smallest_number} and {biggest_number}"
             );
 
             if smallest_number > biggest_number {
                 return Err(ContractError::MinGreaterThanMax);
             }
 
-            // build a common salt for this draw
+            // build a common salt for this lotto_draw
             let mut salt_requestor: Vec<u8> = Vec::new();
             salt_requestor.extend_from_slice(&draw_num.to_be_bytes());
             salt_requestor.extend_from_slice(requestor_id.as_ref());
@@ -408,12 +377,12 @@ mod lotto_draw {
             let mut i: u8 = 0;
 
             while numbers.len() < nb_numbers as usize {
-                // build a salt for this draw number
+                // build a salt for this lotto_draw number
                 let mut salt: Vec<u8> = Vec::new();
                 salt.extend_from_slice(&i.to_be_bytes());
                 salt.extend_from_slice(salt_requestor.as_ref());
 
-                // draw the number
+                // lotto_draw the number
                 let number = self.inner_get_number(salt, smallest_number, biggest_number)?;
                 // check if the number has already been drawn
                 if !numbers.iter().any(|&n| n == number) {
@@ -426,7 +395,7 @@ mod lotto_draw {
             Ok(numbers)
         }
 
-        fn inner_get_number(&self, salt: Vec<u8>, min: NUMBER, max: NUMBER) -> Result<NUMBER> {
+        fn inner_get_number(&self, salt: Vec<u8>, min: Number, max: Number) -> Result<Number> {
             let output = vrf(&salt);
             // keep only 8 bytes to compute the random u64
             let mut arr = [0x00; 8];
@@ -445,12 +414,12 @@ mod lotto_draw {
                 .checked_add(min as u128)
                 .ok_or(ContractError::AddOverFlow)?;
 
-            Ok(r as NUMBER)
+            Ok(r as Number)
         }
 
         /// Simulate and return the winners (admin only - for dev purpose)
         #[ink(message)]
-        pub fn get_winners(&self, draw_num: u32, numbers: Vec<NUMBER>) -> Result<Vec<AccountId>> {
+        pub fn get_winners(&self, draw_num: u32, numbers: Vec<Number>) -> Result<Vec<AccountId>> {
             self.ensure_owner()?;
             self.inner_get_winners(draw_num, &numbers)
         }
@@ -458,11 +427,15 @@ mod lotto_draw {
         fn inner_get_winners(
             &self,
             draw_num: u32,
-            numbers: &Vec<NUMBER>,
+            numbers: &Vec<Number>,
         ) -> Result<Vec<AccountId>> {
             info!(
-                "Request received to get the winners for draw {draw_num} and numbers {numbers:?} "
+                "Request received to get the winners for lotto_draw {draw_num} and numbers {numbers:?} "
             );
+
+            if numbers.is_empty() {
+                return Err(ContractError::NoNumber);
+            }
 
             // check if the endpoint is configured
             let indexer_endpoint = self.ensure_indexer_configured()?;
@@ -508,11 +481,11 @@ mod lotto_draw {
             let mut winners = Vec::new();
             for w in result.data.participations.nodes.iter() {
                 // build the accountId from the string address
-                let account_id =
-                    AccountId32::from_ss58check(w.accountId).expect("incorrect address");
+                let account_id = AccountId32::from_ss58check(w.accountId)
+                    .or(Err(ContractError::InvalidSs58Address))?;
                 let address_hex: [u8; 32] = scale::Encode::encode(&account_id)
                     .try_into()
-                    .expect("incorrect length");
+                    .or(Err(ContractError::InvalidKeyLength))?;
                 winners.push(AccountId::from(address_hex));
             }
 
@@ -790,6 +763,34 @@ mod lotto_draw {
 
             let winners = lotto.get_winners(draw_num, numbers).unwrap();
             debug_println!("winners: {winners:?}");
+        }
+
+        #[ink::test]
+        fn test_no_winner() {
+            let _ = env_logger::try_init();
+            pink_extension_runtime::mock_ext::mock_all_ext();
+
+            let lotto = init_contract();
+
+            let draw_num = 0;
+            let numbers = vec![150, 1, 44, 2800];
+
+            let winners = lotto.get_winners(draw_num, numbers).unwrap();
+            assert_eq!(0, winners.len());
+        }
+
+        #[ink::test]
+        fn test_no_number() {
+            let _ = env_logger::try_init();
+            pink_extension_runtime::mock_ext::mock_all_ext();
+
+            let lotto = init_contract();
+
+            let draw_num = 0;
+            let numbers = vec![];
+
+            let result = lotto.get_winners(draw_num, numbers);
+            assert_eq!(Err(ContractError::NoNumber), result);
         }
 
         #[ink::test]
