@@ -233,7 +233,7 @@ pub mod lotto_contract {
         #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
         pub fn complete_raffle(&mut self) -> Result<(), ContractError> {
             // stop the raffle
-            Raffle::inner_stop_raffle(self)?;
+            Raffle::stop_raffle(self)?;
 
             // request the draw numbers
             let requestor_id = Self::env().account_id();
@@ -263,7 +263,7 @@ pub mod lotto_contract {
             RaffleConfig::check_numbers(self, &numbers)?;
 
             // set the result
-            Raffle::inner_set_results(self, num_raffle, numbers.clone())?;
+            Raffle::set_results(self, num_raffle, numbers.clone())?;
 
             // request to check the winners
             let requestor_id = Self::env().account_id();
@@ -284,35 +284,10 @@ pub mod lotto_contract {
             num_raffle: u32,
             winners: Vec<AccountId>,
         ) -> Result<(), ContractError> {
-            Raffle::inner_set_winners(self, num_raffle, winners)?;
+            Raffle::set_winners(self, num_raffle, winners)?;
             Ok(())
         }
 
-        ///
-        /// ONLY FOR TEST
-        ///
-        #[ink(message)]
-        pub fn test_set_results(
-            &mut self,
-            num_raffle: u32,
-            numbers: Vec<Number>,
-        ) -> Result<(), ContractError> {
-            self.inner_set_results(num_raffle, numbers)?;
-            Ok(())
-        }
-
-        ///
-        /// ONLY FOR TEST
-        ///
-        #[ink(message)]
-        pub fn test_set_winners(
-            &mut self,
-            num_raffle: u32,
-            winners: Vec<AccountId>,
-        ) -> Result<(), ContractError> {
-            self.inner_set_winners(num_raffle, winners)?;
-            Ok(())
-        }
     }
 
     impl rollup_anchor::MessageHandler for Contract {

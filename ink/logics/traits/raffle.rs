@@ -45,12 +45,12 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         Ok(())
     }
 
-    fn inner_stop_raffle(&mut self) -> Result<(), RaffleError> {
+    fn stop_raffle(&mut self) -> Result<(), RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::Ongoing {
             return Err(RaffleError::IncorrectStatus);
         }
-
+        // update the status
         self.data::<Data>().status = Status::WaitingResults;
         Ok(())
     }
@@ -84,7 +84,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         self.data::<Data>().winners.get(num_raffle)
     }
 
-    fn inner_set_results(
+    fn set_results(
         &mut self,
         num_raffle: u32,
         results: Vec<Number>,
@@ -107,14 +107,14 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
                 self.data::<Data>().results.insert(num_raffle, &results);
                 // emmit the event
                 self.emit_results(num_raffle, results);
-
+                // update the status
                 self.data::<Data>().status = Status::WaitingWinners;
                 Ok(())
             }
         }
     }
 
-    fn inner_set_winners(
+    fn set_winners(
         &mut self,
         num_raffle: u32,
         winners: Vec<AccountId>,
@@ -137,7 +137,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
                 self.data::<Data>().winners.insert(num_raffle, &winners);
                 // emmit the event
                 self.emit_winners(num_raffle, winners);
-
+                // update the status
                 self.data::<Data>().status = Status::Closed;
                 Ok(())
             }
