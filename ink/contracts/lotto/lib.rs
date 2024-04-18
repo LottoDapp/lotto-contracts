@@ -73,6 +73,7 @@ pub mod lotto_contract {
     pub enum ContractError {
         AccessControlError(AccessControlError),
         RaffleError(RaffleError),
+        RollupAnchorError(RollupAnchorError),
     }
 
     /// convertor from AccessControlError to ContractError
@@ -86,6 +87,13 @@ pub mod lotto_contract {
     impl From<RaffleError> for ContractError {
         fn from(error: RaffleError) -> Self {
             ContractError::RaffleError(error)
+        }
+    }
+
+    /// convertor from RaffleError to ContractError
+    impl From<RollupAnchorError> for ContractError {
+        fn from(error: RollupAnchorError) -> Self {
+            ContractError::RollupAnchorError(error)
         }
     }
 
@@ -214,10 +222,69 @@ pub mod lotto_contract {
         #[ink(message)]
         pub fn participate(&mut self, numbers: Vec<Number>) -> Result<(), ContractError> {
             // check if the numbers are correct
-            self.check_numbers(&numbers)?;
+            RaffleConfig::check_numbers(self, &numbers)?;
             // register the participation
-            self.inner_participate(numbers)?;
+            Raffle::inner_participate(self, numbers)?;
 
+            Ok(())
+        }
+
+        #[ink(message)]
+        #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
+        pub fn complete_raffle(&mut self) -> Result<(), ContractError> {
+            // stop the raffle
+            Raffle::inner_stop_raffle(self)?;
+
+            // request the draw numbers
+            let requestor_id = Self::env().account_id();
+            let draw_num = Raffle::get_current_raffle(self);
+            let config = RaffleConfig::ensure_config(self)?;
+
+            let message = LottoRequestMessage {
+                requestor_id,
+                draw_num,
+                request: Request::DrawNumbers(
+                    config.nb_numbers,
+                    config.min_number,
+                    config.min_number,
+                ),
+            };
+            RollupAnchor::push_message(self, &message)?;
+
+            Ok(())
+        }
+
+        fn inner_set_results(
+            &mut self,
+            num_raffle: u32,
+            numbers: Vec<Number>,
+        ) -> Result<(), ContractError> {
+            // check if the numbers are correct
+            RaffleConfig::check_numbers(self, &numbers)?;
+
+            // set the result
+            Raffle::inner_set_results(self, num_raffle, numbers.clone())?;
+
+            // request to check the winners
+            let requestor_id = Self::env().account_id();
+            let draw_num = self.get_current_raffle();
+
+            let message = LottoRequestMessage {
+                requestor_id,
+                draw_num,
+                request: Request::CheckWinners(numbers),
+            };
+            self.push_message(&message)?;
+
+            Ok(())
+        }
+
+        pub fn inner_set_winners(
+            &mut self,
+            num_raffle: u32,
+            winners: Vec<AccountId>,
+        ) -> Result<(), ContractError> {
+            Raffle::inner_set_winners(self, num_raffle, winners)?;
             Ok(())
         }
 
@@ -230,9 +297,6 @@ pub mod lotto_contract {
             num_raffle: u32,
             numbers: Vec<Number>,
         ) -> Result<(), ContractError> {
-            // check if the numbers are correct
-            self.check_numbers(&numbers)?;
-            // set the results
             self.inner_set_results(num_raffle, numbers)?;
             Ok(())
         }

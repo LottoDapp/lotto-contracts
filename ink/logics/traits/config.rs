@@ -14,13 +14,14 @@ pub struct Data {
 #[derive(Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
 pub struct Config {
-    nb_numbers: u8,
-    min_number: Number,
-    max_number: Number,
+    pub nb_numbers: u8,
+    pub min_number: Number,
+    pub max_number: Number,
 }
 
 #[openbrush::trait_definition]
 pub trait RaffleConfig: Storage<Data> + access_control::Internal {
+
     #[ink(message)]
     #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
     fn set_config(&mut self, config: Config) -> Result<(), RaffleError> {

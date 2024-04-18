@@ -3,6 +3,7 @@ use crate::traits::error::RaffleError::*;
 use crate::traits::{Number, LOTTO_MANAGER_ROLE};
 use ink::prelude::vec::Vec;
 use ink::storage::Mapping;
+use ink::storage::traits::StorageLayout;
 use openbrush::contracts::access_control::access_control;
 use openbrush::traits::{AccountId, Storage};
 
@@ -10,24 +11,47 @@ use openbrush::traits::{AccountId, Storage};
 #[openbrush::storage_item]
 pub struct Data {
     current_raffle: u32,
+    status: Status,
     results: Mapping<u32, Vec<Number>>,
     winners: Mapping<u32, Vec<AccountId>>,
 }
 
+#[derive(Default, Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+pub enum Status {
+    #[default]
+    NotStarted,
+    Ongoing,
+    WaitingResults,
+    WaitingWinners,
+    Closed,
+}
+
 #[openbrush::trait_definition]
 pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
-    #[ink(message)]
-    #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
-    fn start_raffle(&mut self, num_raffle: u32) -> Result<(), RaffleError> {
-        // TODO check if the raffle doesn't exist
-        self.data::<Data>().current_raffle = num_raffle;
-        Ok(())
-    }
 
     #[ink(message)]
     #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
-    fn stop_raffle(&mut self) -> Result<(), RaffleError> {
-        self.data::<Data>().current_raffle = 0;
+    fn start_raffle(&mut self, num_raffle: u32) -> Result<(), RaffleError> {
+        // check the status
+        if self.data::<Data>().status != Status::NotStarted
+            && self.data::<Data>().status != Status::Closed
+        {
+            return Err(RaffleError::IncorrectStatus);
+        }
+
+        self.data::<Data>().current_raffle = num_raffle;
+        self.data::<Data>().status = Status::Ongoing;
+        Ok(())
+    }
+
+    fn inner_stop_raffle(&mut self) -> Result<(), RaffleError> {
+        // check the status
+        if self.data::<Data>().status != Status::Ongoing {
+            return Err(RaffleError::IncorrectStatus);
+        }
+
+        self.data::<Data>().status = Status::WaitingResults;
         Ok(())
     }
 
@@ -37,13 +61,17 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         // TODO check if the raffle is not the current one
 
         self.data::<Data>().results.remove(num_raffle);
-        self.data::<Data>().results.remove(num_raffle);
         Ok(())
     }
 
     #[ink(message)]
     fn get_current_raffle(&self) -> u32 {
         self.data::<Data>().current_raffle
+    }
+
+    #[ink(message)]
+    fn get_status(&self) -> Status {
+        self.data::<Data>().status
     }
 
     #[ink(message)]
@@ -61,7 +89,16 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         num_raffle: u32,
         results: Vec<Number>,
     ) -> Result<(), RaffleError> {
-        // TODO check if the raffle exists and it's stopped
+
+        // check the raffle number
+        if self.data::<Data>().current_raffle != num_raffle {
+            return Err(RaffleError::IncorrectRaffle);
+        }
+
+        // check the status
+        if self.data::<Data>().status != Status::WaitingResults {
+            return Err(RaffleError::IncorrectStatus);
+        }
 
         match self.data::<Data>().results.get(num_raffle) {
             Some(_) => Err(ExistingResults),
@@ -70,6 +107,8 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
                 self.data::<Data>().results.insert(num_raffle, &results);
                 // emmit the event
                 self.emit_results(num_raffle, results);
+
+                self.data::<Data>().status = Status::WaitingWinners;
                 Ok(())
             }
         }
@@ -80,7 +119,16 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         num_raffle: u32,
         winners: Vec<AccountId>,
     ) -> Result<(), RaffleError> {
-        // TODO check if the raffle exists and it's stopped and the results are known
+
+        // check the raffle number
+        if self.data::<Data>().current_raffle != num_raffle {
+            return Err(RaffleError::IncorrectRaffle);
+        }
+
+        // check the status
+        if self.data::<Data>().status != Status::WaitingResults {
+            return Err(RaffleError::IncorrectStatus);
+        }
 
         match self.data::<Data>().winners.get(num_raffle) {
             Some(_) => Err(ExistingWinners),
@@ -89,13 +137,19 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
                 self.data::<Data>().winners.insert(num_raffle, &winners);
                 // emmit the event
                 self.emit_winners(num_raffle, winners);
+
+                self.data::<Data>().status = Status::Closed;
                 Ok(())
             }
         }
     }
 
     fn inner_participate(&mut self, numbers: Vec<Number>) -> Result<(), RaffleError> {
-        // TODO check if a raffle is started
+
+        // check the status
+        if self.data::<Data>().status != Status::Ongoing {
+            return Err(RaffleError::IncorrectStatus);
+        }
 
         let participant = Self::env().caller();
         let num_raffle = self.data::<Data>().current_raffle;
