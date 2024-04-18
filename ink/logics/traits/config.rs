@@ -1,7 +1,6 @@
 use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
-use crate::traits::{LOTTO_MANAGER_ROLE, NUMBER};
-use ink::prelude::vec::Vec;
+use crate::traits::{Number, LOTTO_MANAGER_ROLE};
 use ink::storage::traits::StorageLayout;
 use openbrush::contracts::access_control::access_control;
 use openbrush::traits::Storage;
@@ -16,8 +15,8 @@ pub struct Data {
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
 pub struct Config {
     nb_numbers: u8,
-    min_number: NUMBER,
-    max_number: NUMBER,
+    min_number: Number,
+    max_number: Number,
 }
 
 #[openbrush::trait_definition]
@@ -51,7 +50,7 @@ pub trait RaffleConfig: Storage<Data> + access_control::Internal {
         }
     }
 
-    fn check_numbers(&mut self, numbers: &Vec<NUMBER>) -> Result<(), RaffleError> {
+    fn check_numbers(&mut self, numbers: &[Number]) -> Result<(), RaffleError> {
         // check if the config is set
         let config = self.ensure_config()?;
 

@@ -10,16 +10,12 @@ pub mod lotto_contract {
     use openbrush::contracts::ownable::*;
     use openbrush::{modifiers, traits::Storage};
 
-    use lotto::traits::{config, config::*, error::*, raffle, raffle::*, LOTTO_MANAGER_ROLE, NUMBER};
-
-    use lotto::traits::config::Config;
-
-    use ::lotto::traits::error::RaffleError;
-    use ::lotto::traits::raffle::Raffle;
+    use lotto::traits::{
+        config, config::*, error::*, raffle, raffle::*, Number, LOTTO_MANAGER_ROLE,
+    };
 
     use phat_rollup_anchor_ink::traits::{
-        js_rollup_anchor, js_rollup_anchor::*, meta_transaction, meta_transaction::*,
-        rollup_anchor, rollup_anchor::*,
+        meta_transaction, meta_transaction::*, rollup_anchor, rollup_anchor::*,
     };
 
     /// Event emitted when the participant is registered
@@ -29,7 +25,7 @@ pub mod lotto_contract {
         num_raffle: u32,
         #[ink(topic)]
         participant: AccountId,
-        numbers: Vec<NUMBER>,
+        numbers: Vec<Number>,
     }
 
     /// Event emitted when the raffle is started
@@ -51,7 +47,7 @@ pub mod lotto_contract {
     pub struct ResultReceived {
         #[ink(topic)]
         num_raffle: u32,
-        numbers: Vec<NUMBER>,
+        numbers: Vec<Number>,
     }
 
     /// Event emitted when the winners are revealed
@@ -68,7 +64,7 @@ pub mod lotto_contract {
         #[ink(topic)]
         num_raffle: u32,
         /// error
-        error: Vec<NUMBER>,
+        error: Vec<u8>,
     }
 
     /// Errors occurred in the contract
@@ -87,7 +83,6 @@ pub mod lotto_contract {
     }
 
     /// convertor from RaffleError to ContractError
-
     impl From<RaffleError> for ContractError {
         fn from(error: RaffleError) -> Self {
             ContractError::RaffleError(error)
@@ -100,6 +95,70 @@ pub mod lotto_contract {
             ink::env::debug_println!("Error: {:?}", error);
             RollupAnchorError::UnsupportedAction
         }
+    }
+    /*
+       /// convertor from RaffleError to RollupAnchorError
+       impl From<error::RaffleError> for rollup_anchor::RollupAnchorError {
+           fn from(error: error::RaffleError) -> Self {
+               ink::env::debug_println!("Error: {:?}", error);
+               RollupAnchorError::UnsupportedAction
+           }
+       }
+    */
+
+    /// Message to request the lotto lotto_draw or the list of winners
+    /// message pushed in the queue by the Ink! smart contract and read by the offchain rollup
+    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub struct LottoRequestMessage {
+        /// id of the requestor
+        requestor_id: AccountId,
+        /// lotto_draw number
+        draw_num: u32,
+        /// request
+        request: Request,
+    }
+
+    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub enum Request {
+        /// request to lotto_draw the n number between min and max values
+        /// arg1: number of numbers for the lotto_draw
+        /// arg2:  smallest number for the lotto_draw
+        /// arg2:  biggest number for the lotto_draw
+        DrawNumbers(u8, Number, Number),
+        /// request to check if there is a winner for the given numbers
+        CheckWinners(Vec<Number>),
+    }
+
+    /// Message sent to provide the lotto lotto_draw or the list of winners
+    /// response pushed in the queue by the offchain rollup and read by the Ink! smart contract
+    #[derive(scale::Encode, scale::Decode)]
+    struct LottoResponseMessage {
+        /// initial request
+        request: LottoRequestMessage,
+        /// response
+        response: Response,
+    }
+
+    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub enum Response {
+        /// list of numbers
+        Numbers(Vec<Number>),
+        /// list of winners
+        Winners(Vec<AccountId>),
+        /// when an error occurs
+        Error(Vec<u8>),
     }
 
     /// Contract storage
@@ -115,8 +174,6 @@ pub mod lotto_contract {
         #[storage_field]
         meta_transaction: meta_transaction::Data,
         #[storage_field]
-        js_rollup_anchor: js_rollup_anchor::Data,
-        #[storage_field]
         config: config::Data,
         #[storage_field]
         lotto: raffle::Data,
@@ -127,7 +184,6 @@ pub mod lotto_contract {
 
     impl RollupAnchor for Contract {}
     impl MetaTransaction for Contract {}
-    impl JsRollupAnchor for Contract {}
 
     impl Contract {
         #[ink(constructor)]
@@ -156,7 +212,7 @@ pub mod lotto_contract {
         }
 
         #[ink(message)]
-        pub fn participate(&mut self, numbers: Vec<NUMBER>) -> Result<(), ContractError> {
+        pub fn participate(&mut self, numbers: Vec<Number>) -> Result<(), ContractError> {
             // check if the numbers are correct
             self.check_numbers(&numbers)?;
             // register the participation
@@ -169,7 +225,11 @@ pub mod lotto_contract {
         /// ONLY FOR TEST
         ///
         #[ink(message)]
-        pub fn test_set_results(&mut self, num_raffle: u32, numbers: Vec<NUMBER>) -> Result<(), ContractError> {
+        pub fn test_set_results(
+            &mut self,
+            num_raffle: u32,
+            numbers: Vec<Number>,
+        ) -> Result<(), ContractError> {
             // check if the numbers are correct
             self.check_numbers(&numbers)?;
             // set the results
@@ -181,50 +241,33 @@ pub mod lotto_contract {
         /// ONLY FOR TEST
         ///
         #[ink(message)]
-        pub fn test_set_winners(&mut self, num_raffle: u32, winners: Vec<AccountId>) -> Result<(), ContractError> {
+        pub fn test_set_winners(
+            &mut self,
+            num_raffle: u32,
+            winners: Vec<AccountId>,
+        ) -> Result<(), ContractError> {
             self.inner_set_winners(num_raffle, winners)?;
             Ok(())
         }
-
-    }
-
-    #[derive(scale::Encode, scale::Decode)]
-    pub struct RaffleRequestMessage {
-        pub era: u32,
-        pub nb_winners: u16,
-        pub excluded: Vec<AccountId>,
-    }
-
-    #[derive(scale::Encode, scale::Decode)]
-    pub struct RaffleResponseMessage {
-        pub era: u32,
-        pub skipped: bool,
-        pub rewards: Balance,
-        pub winners: Vec<AccountId>,
     }
 
     impl rollup_anchor::MessageHandler for Contract {
         fn on_message_received(&mut self, action: Vec<u8>) -> Result<(), RollupAnchorError> {
-            let response = JsRollupAnchor::on_message_received::<
-                RaffleRequestMessage,
-                RaffleResponseMessage,
-            >(self, action)?;
-            match response {
-                MessageReceived::Ok { output } => {
-                    // register the info
-                    //self.save_response(&output)?;
-                }
-                MessageReceived::Error { error, input } => {
-                    // we received an error
-                    /*
-                    let timestamp = self.env().block_timestamp();
-                    self.env().emit_event(ErrorReceived {
-                        era: input.era,
-                        error,
-                        timestamp,
-                    });
+            // parse the response
+            let message: LottoResponseMessage = scale::Decode::decode(&mut &action[..])
+                .or(Err(RollupAnchorError::FailedToDecode))?;
 
-                     */
+            let num_raffle = message.request.draw_num;
+
+            match message.response {
+                Response::Numbers(numbers) => self
+                    .inner_set_results(num_raffle, numbers)
+                    .or(Err(RollupAnchorError::UnsupportedAction))?,
+                Response::Winners(winners) => self
+                    .inner_set_winners(num_raffle, winners)
+                    .or(Err(RollupAnchorError::UnsupportedAction))?,
+                Response::Error(error) => {
+                    self.env().emit_event(ErrorReceived { num_raffle, error })
                 }
             }
 
@@ -237,7 +280,7 @@ pub mod lotto_contract {
             &self,
             num_raffle: u32,
             participant: AccountId,
-            numbers: Vec<NUMBER>,
+            numbers: Vec<Number>,
         ) {
             // emit the event
             self.env().emit_event(ParticipationRegistered {
@@ -247,7 +290,7 @@ pub mod lotto_contract {
             });
         }
 
-        fn emit_results(&self, num_raffle: u32, numbers: Vec<NUMBER>) {
+        fn emit_results(&self, num_raffle: u32, numbers: Vec<Number>) {
             // emit the event
             self.env().emit_event(ResultReceived {
                 num_raffle,
@@ -264,18 +307,35 @@ pub mod lotto_contract {
         }
     }
 
+    /// Event emitted when a message is pushed in the queue
+    #[ink(event)]
+    pub struct MessageQueued {
+        id: u32,
+        data: Vec<u8>,
+    }
+
+    /// Event emitted when a message is processed
+    #[ink(event)]
+    pub struct MessageProcessedTo {
+        id: u32,
+    }
+
     impl rollup_anchor::EventBroadcaster for Contract {
-        fn emit_event_message_queued(&self, _id: u32, _data: Vec<u8>) {
-            // no queue here
+        fn emit_event_message_queued(&self, id: u32, data: Vec<u8>) {
+            self.env().emit_event(MessageQueued { id, data });
         }
-        fn emit_event_message_processed_to(&self, _id: u32) {
-            // no queue here
+        fn emit_event_message_processed_to(&self, id: u32) {
+            self.env().emit_event(MessageProcessedTo { id });
         }
     }
 
+    /// Event emitted when a Meta Tx is decoded
+    #[ink(event)]
+    pub struct MetaTxDecoded {}
+
     impl meta_transaction::EventBroadcaster for Contract {
         fn emit_event_meta_tx_decoded(&self) {
-            // do nothing
+            self.env().emit_event(MetaTxDecoded {});
         }
     }
 }

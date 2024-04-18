@@ -2,7 +2,7 @@ use openbrush::contracts::access_control::RoleType;
 
 pub const LOTTO_MANAGER_ROLE: RoleType = ink::selector_id!("LOTTO_MANAGER");
 
-pub type NUMBER = u16;
+pub type Number = u16;
 
 pub mod config;
 pub mod error;
