@@ -47,7 +47,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         Ok(new_raffle_id)
     }
 
-    fn stop_raffle(&mut self) -> Result<(), RaffleError> {
+    fn stop_current_raffle(&mut self) -> Result<(), RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::Ongoing {
             return Err(RaffleError::IncorrectStatus);
@@ -63,7 +63,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
     }
 
     #[ink(message)]
-    fn get_status(&self) -> Status {
+    fn get_current_status(&self) -> Status {
         self.data::<Data>().status
     }
 
@@ -119,7 +119,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         }
 
         // check the status
-        if self.data::<Data>().status != Status::WaitingResults {
+        if self.data::<Data>().status != Status::WaitingWinners {
             return Err(RaffleError::IncorrectStatus);
         }
 

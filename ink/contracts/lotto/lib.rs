@@ -146,7 +146,7 @@ pub mod lotto_contract {
     /// Message sent to provide the lotto lotto_draw or the list of winners
     /// response pushed in the queue by the offchain rollup and read by the Ink! smart contract
     #[derive(scale::Encode, scale::Decode)]
-    struct LottoResponseMessage {
+    pub struct LottoResponseMessage {
         /// initial request
         pub request: LottoRequestMessage,
         /// response
@@ -231,7 +231,7 @@ pub mod lotto_contract {
         #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
         pub fn complete_raffle(&mut self) -> Result<(), ContractError> {
             // stop the raffle
-            Raffle::stop_raffle(self)?;
+            Raffle::stop_current_raffle(self)?;
 
             // request the draw numbers
             let raffle_id = Raffle::get_current_raffle_id(self);
