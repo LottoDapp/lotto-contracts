@@ -16,6 +16,7 @@ mod lotto_draw {
     use sp_core::crypto::{AccountId32, Ss58Codec};
 
 
+    pub type RaffleId = u32;
     pub type Number = u16;
 
     /// Message to request the lotto lotto_draw or the list of winners
@@ -26,10 +27,8 @@ mod lotto_draw {
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
     pub struct LottoRequestMessage {
-        /// id of the requestor
-        requestor_id: AccountId,
         /// lotto_draw number
-        draw_num: u32,
+        raffle_id: RaffleId,
         /// request
         request: Request,
     }
@@ -306,8 +305,7 @@ mod lotto_draw {
             let response = match message.request {
                 Request::DrawNumbers(nb_numbers, smallest_number, biggest_number) => {
                     let result = self.inner_get_numbers(
-                        message.requestor_id,
-                        message.draw_num,
+                        message.raffle_id,
                         nb_numbers,
                         smallest_number,
                         biggest_number,
@@ -318,7 +316,7 @@ mod lotto_draw {
                     }
                 }
                 Request::CheckWinners(ref numbers) => {
-                    let result = self.inner_get_winners(message.draw_num, numbers);
+                    let result = self.inner_get_winners(message.raffle_id, numbers);
                     match result {
                         Ok(winners) => Response::Winners(winners),
                         Err(e) => Response::Error(e.encode()),
@@ -336,16 +334,14 @@ mod lotto_draw {
         #[ink(message)]
         pub fn get_numbers(
             &self,
-            requestor_id: AccountId,
-            draw_num: u32,
+            raffle_id: RaffleId,
             nb_numbers: u8,
             smallest_number: Number,
             biggest_number: Number,
         ) -> Result<Vec<Number>> {
             self.ensure_owner()?;
             self.inner_get_numbers(
-                requestor_id,
-                draw_num,
+                raffle_id,
                 nb_numbers,
                 smallest_number,
                 biggest_number,
@@ -354,24 +350,18 @@ mod lotto_draw {
 
         fn inner_get_numbers(
             &self,
-            requestor_id: AccountId,
-            draw_num: u32,
+            raffle_id: RaffleId,
             nb_numbers: u8,
             smallest_number: Number,
             biggest_number: Number,
         ) -> Result<Vec<Number>> {
             info!(
-                "Request received from requestor {requestor_id:?} / {draw_num} - lotto_draw {nb_numbers} numbers between {smallest_number} and {biggest_number}"
+                "Request received for raffle {raffle_id} - draw {nb_numbers} numbers between {smallest_number} and {biggest_number}"
             );
 
             if smallest_number > biggest_number {
                 return Err(ContractError::MinGreaterThanMax);
             }
-
-            // build a common salt for this lotto_draw
-            let mut salt_requestor: Vec<u8> = Vec::new();
-            salt_requestor.extend_from_slice(&draw_num.to_be_bytes());
-            salt_requestor.extend_from_slice(requestor_id.as_ref());
 
             let mut numbers = Vec::new();
             let mut i: u8 = 0;
@@ -380,7 +370,7 @@ mod lotto_draw {
                 // build a salt for this lotto_draw number
                 let mut salt: Vec<u8> = Vec::new();
                 salt.extend_from_slice(&i.to_be_bytes());
-                salt.extend_from_slice(salt_requestor.as_ref());
+                salt.extend_from_slice(&raffle_id.to_be_bytes());
 
                 // lotto_draw the number
                 let number = self.inner_get_number(salt, smallest_number, biggest_number)?;
@@ -426,11 +416,11 @@ mod lotto_draw {
 
         fn inner_get_winners(
             &self,
-            draw_num: u32,
+            raffle_id: RaffleId,
             numbers: &Vec<Number>,
         ) -> Result<Vec<AccountId>> {
             info!(
-                "Request received to get the winners for lotto_draw {draw_num} and numbers {numbers:?} "
+                "Request received to get the winners for raffle id {raffle_id} and numbers {numbers:?} "
             );
 
             if numbers.is_empty() {
@@ -448,7 +438,7 @@ mod lotto_draw {
             // build the filter
             let mut filter = format!(
                 r#"filter:{{and:[{{numRaffle:{{equalTo:\"{}\"}}}}"#,
-                draw_num
+                raffle_id
             );
             for n in numbers {
                 let f = format!(r#",{{numbers:{{contains:\"{}\"}}}}"#, n);
@@ -563,8 +553,6 @@ mod lotto_draw {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ink::env::debug_println;
-        use ink::primitives::AccountId;
 
         struct EnvVars {
             /// The RPC endpoint of the target blockchain
@@ -664,16 +652,14 @@ mod lotto_draw {
 
             let lotto = init_contract();
 
-            let requestor_id = AccountId::try_from(*&[1u8; 32]).unwrap();
-            let draw_num = 1;
+            let raffle_id = 1;
             let nb_numbers = 5;
             let smallest_number = 1;
             let biggest_number = 50;
 
             let result = lotto
                 .get_numbers(
-                    requestor_id,
-                    draw_num,
+                    raffle_id,
                     nb_numbers,
                     smallest_number,
                     biggest_number,
@@ -685,7 +671,7 @@ mod lotto_draw {
                 assert!(n <= biggest_number);
             }
 
-            debug_println!("random numbers: {result:?}");
+            ink::env::debug_println!("random numbers: {result:?}");
         }
 
         #[ink::test]
@@ -695,16 +681,14 @@ mod lotto_draw {
 
             let lotto = init_contract();
 
-            let requestor_id = AccountId::try_from(*&[1u8; 32]).unwrap();
-            let draw_num = 1;
+            let raffle_id = 1;
             let nb_numbers = 5;
             let smallest_number = 1;
             let biggest_number = 5;
 
             let result = lotto
                 .get_numbers(
-                    requestor_id,
-                    draw_num,
+                    raffle_id,
                     nb_numbers,
                     smallest_number,
                     biggest_number,
@@ -716,7 +700,7 @@ mod lotto_draw {
                 assert!(n <= biggest_number);
             }
 
-            debug_println!("random numbers: {result:?}");
+            ink::env::debug_println!("random numbers: {result:?}");
         }
 
         #[ink::test]
@@ -726,8 +710,6 @@ mod lotto_draw {
 
             let lotto = init_contract();
 
-            let requestor_id = AccountId::try_from(*&[1u8; 32]).unwrap();
-
             let nb_numbers = 5;
             let smallest_number = 1;
             let biggest_number = 50;
@@ -736,14 +718,14 @@ mod lotto_draw {
 
             for i in 0..100 {
                 let result = lotto
-                    .get_numbers(requestor_id, i, nb_numbers, smallest_number, biggest_number)
+                    .get_numbers(i, nb_numbers, smallest_number, biggest_number)
                     .unwrap();
                 // this result must be different from the previous ones
                 results.iter().for_each(|r| assert_ne!(result, *r));
 
                 // same request message means same result
                 let result_2 = lotto
-                    .get_numbers(requestor_id, i, nb_numbers, smallest_number, biggest_number)
+                    .get_numbers(i, nb_numbers, smallest_number, biggest_number)
                     .unwrap();
                 assert_eq!(result, result_2);
 
@@ -762,7 +744,7 @@ mod lotto_draw {
             let numbers = vec![15, 1, 44, 28];
 
             let winners = lotto.get_winners(draw_num, numbers).unwrap();
-            debug_println!("winners: {winners:?}");
+            ink::env::debug_println!("winners: {winners:?}");
         }
 
         #[ink::test]
@@ -802,7 +784,7 @@ mod lotto_draw {
             let lotto = init_contract();
 
             let r = lotto.answer_request().expect("failed to answer request");
-            debug_println!("answer request: {r:?}");
+            ink::env::debug_println!("answer request: {r:?}");
         }
     }
 }

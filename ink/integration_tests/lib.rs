@@ -9,40 +9,32 @@ mod e2e_tests {
     use openbrush::traits::AccountId;
     use scale::Encode;
 
-    use lucky::traits::raffle::raffle_external::Raffle;
-    use lucky::traits::reward::psp22_reward::psp22reward_external::Psp22Reward;
-    use lucky::traits::reward::psp22_reward::REWARD_MANAGER_ROLE;
-    use raffle_consumer::{
-        raffle_consumer, RaffleRequestMessage, RaffleResponseMessage
-    };
-    use dapps_staking_developer::{dapps_staking_developer, WHITELISTED_ADDRESS};
-    use reward_manager::reward_manager;
+    use lotto::traits::Number;
+    use lotto::traits::raffle::raffle_external::Raffle;
+    use lotto::traits::config::Config;
+    use lotto::traits::config::raffleconfig_external::RaffleConfig;
 
-    use phat_rollup_anchor_ink::traits::js_rollup_anchor::jsrollupanchor_external::JsRollupAnchor;
+    use lotto_contract::{ lotto_contract, *};
+
     use phat_rollup_anchor_ink::traits::meta_transaction::metatransaction_external::MetaTransaction;
     use phat_rollup_anchor_ink::traits::rollup_anchor::rollupanchor_external::RollupAnchor;
 
     use phat_rollup_anchor_ink::traits::{
-        js_rollup_anchor, js_rollup_anchor::ResponseMessage::JsResponse, rollup_anchor::*,
+        rollup_anchor, rollup_anchor::*,
     };
 
     type E2EResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-    struct Contracts { 
-        raffle_consumer_account_id: AccountId,
-        dapps_staking_developer_account_id: AccountId,
-        reward_manager_account_id: AccountId,
-    }
 
     async fn alice_instantiates_contract(
         client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
-    ) -> Contracts {
-        let reward_manager_constructor = reward_manager::ContractRef::new();
-        let reward_manager_account_id = client
+    ) -> AccountId {
+        let lotto_constructor = lotto_contract::ContractRef::new();
+        let lotto_contract_id = client
             .instantiate(
-                "reward_manager",
+                "lotto_contract",
                 &ink_e2e::alice(),
-                reward_manager_constructor,
+                lotto_constructor,
                 0,
                 None,
             )
@@ -50,111 +42,26 @@ mod e2e_tests {
             .expect("instantiate failed")
             .account_id;
 
-        let dapps_staking_developer_constructor = dapps_staking_developer::ContractRef::new();
-        let dapps_staking_developer_account_id = client
-            .instantiate(
-                "dapps_staking_developer",
-                &ink_e2e::alice(),
-                dapps_staking_developer_constructor,
-                0,
-                None,
-            )
-            .await
-            .expect("instantiate failed")
-            .account_id;
-
-        let raffle_consumer_constructor = raffle_consumer::ContractRef::new(
-            dapps_staking_developer_account_id,
-            reward_manager_account_id,
-        );
-        let raffle_consumer_account_id = client
-            .instantiate(
-                "raffle_consumer",
-                &ink_e2e::alice(),
-                raffle_consumer_constructor,
-                0,
-                None,
-            )
-            .await
-            .expect("instantiate failed")
-            .account_id;
-
-        Contracts {
-            raffle_consumer_account_id,
-            dapps_staking_developer_account_id,
-            reward_manager_account_id,
-        }
+        lotto_contract_id
     }
 
-    async fn alice_configure_contracts(
-        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
-        contracts: &Contracts,
-    ) {
-        let grant_whitelisted_role = build_message::<dapps_staking_developer::ContractRef>(
-            contracts.dapps_staking_developer_account_id.clone(),
-        )
-        .call(|contract| {
-            contract.grant_role(WHITELISTED_ADDRESS, Some(contracts.raffle_consumer_account_id))
-        });
-        client
-            .call(&ink_e2e::alice(), grant_whitelisted_role, 0, None)
-            .await
-            .expect("grant whitelisted role failed");
-
-        let grant_reward_manager_role = build_message::<reward_manager::ContractRef>(
-            contracts.reward_manager_account_id.clone(),
-        )
-        .call(|contract| {
-            contract.grant_role(REWARD_MANAGER_ROLE, Some(contracts.raffle_consumer_account_id))
-        });
-        client
-            .call(&ink_e2e::alice(), grant_reward_manager_role, 0, None)
-            .await
-            .expect("grant reward manager role failed");
-
-        let set_ratio_distribution = build_message::<raffle_consumer::ContractRef>(
-            contracts.raffle_consumer_account_id.clone(),
-        )
-        .call(|contract| contract.set_ratio_distribution(vec![10], 100));
-        client
-            .call(&ink_e2e::alice(), set_ratio_distribution, 0, None)
-            .await
-            .expect("set ratio distribution failed");
-
-        let set_next_era = build_message::<raffle_consumer::ContractRef>(
-            contracts.raffle_consumer_account_id.clone(),
-        )
-        .call(|contract| contract.set_next_era(13));
-        client
-            .call(&ink_e2e::alice(), set_next_era, 0, None)
-            .await
-            .expect("set last era failed");
-    }
-
-    async fn alice_set_js_script_hash(
+    async fn alice_configures_contract(
         client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
         contract_id: &AccountId,
     ) {
-        let code_hash = [1u8; 32];
-        let set_js_script_hash = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.set_js_script_hash(code_hash));
+        let config = Config {
+            nb_numbers: 4,
+            min_number: 1,
+            max_number: 50,
+        };
+        let set_config = build_message::<lotto_contract::ContractRef>(
+            contract_id.clone(),
+        )
+        .call(|contract| contract.set_config(config));
         client
-            .call(&ink_e2e::alice(), set_js_script_hash, 0, None)
+            .call(&ink_e2e::alice(), set_config, 0, None)
             .await
-            .expect("set js code hash failed");
-    }
-
-    async fn alice_set_settings_hash(
-        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
-        contract_id: &AccountId,
-    ) {
-        let code_hash = [2u8; 32];
-        let set_settings_hash = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.set_settings_hash(code_hash));
-        client
-            .call(&ink_e2e::alice(), set_settings_hash, 0, None)
-            .await
-            .expect("set settings hash failed");
+            .expect("set config failed");
     }
 
     async fn alice_grants_bob_as_attestor(
@@ -163,7 +70,7 @@ mod e2e_tests {
     ) {
         // bob is granted as attestor
         let bob_address = ink::primitives::AccountId::from(ink_e2e::bob().public_key().0);
-        let grant_role = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let grant_role = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.grant_role(ATTESTOR_ROLE, Some(bob_address)));
         client
             .call(&ink_e2e::alice(), grant_role, 0, None)
@@ -171,46 +78,90 @@ mod e2e_tests {
             .expect("grant bob as attestor failed");
     }
 
+    async fn alice_starts_raffle(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+        raffle_num: u32,
+    ) {
+        let start_raffle = build_message::<lotto_contract::ContractRef>(
+            contract_id.clone(),
+        )
+            .call(|contract| contract.start_raffle(raffle_num));
+        client
+            .call(&ink_e2e::alice(), start_raffle, 0, None)
+            .await
+            .expect("start raffle failed");
+    }
+
+    async fn alice_stops_raffle(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+    ) {
+        let stop_raffle = build_message::<lotto_contract::ContractRef>(
+            contract_id.clone(),
+        )
+            .call(|contract| contract.complete_raffle());
+        client
+            .call(&ink_e2e::alice(), stop_raffle, 0, None)
+            .await
+            .expect("stop raffle failed");
+    }
+
+    async fn participates(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+        signer: &ink_e2e::Keypair,
+        numbers: Vec<Number>,
+    ) {
+        let participate = build_message::<lotto_contract::ContractRef>(
+            contract_id.clone(),
+        )
+            .call(|contract| contract.participate(numbers.clone()));
+        client
+            .call(signer, participate, 0, None)
+            .await
+            .expect("Participate failed");
+    }
+
     #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
+        additional_contracts = "contracts/lotto/Cargo.toml"
     )]
     async fn test_do_raffle(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
         // given
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
+        let contract_id = alice_instantiates_contract(&mut client).await;
 
-        // grants the contracts
-        alice_configure_contracts(&mut client, &contracts).await;
-
-        // fund the developer contract
-        let fund_dev_contract = build_message::<dapps_staking_developer::ContractRef>(
-            contracts.dapps_staking_developer_account_id.clone(),
-        )
-        .call(|contract| contract.fund());
-        client
-            .call(&ink_e2e::alice(), fund_dev_contract, 100, None)
-            .await
-            .expect("fund dev contract failed");
-
-        // check the balance of the developer contract
-        let dev_contract_balance = client
-            .balance(contracts.dapps_staking_developer_account_id)
-            .await
-            .expect("getting dev contract balance failed");
-
-        assert_eq!(1000000100, dev_contract_balance);
-
-        // set the js code hash
-        alice_set_js_script_hash(&mut client, &contract_id).await;
-
-        // set the settings code hash
-        alice_set_settings_hash(&mut client, &contract_id).await;
+        // configure the raffle
+        alice_configures_contract(&mut client, &contract_id).await;
 
         // bob is granted as attestor
         alice_grants_bob_as_attestor(&mut client, &contract_id).await;
 
-        let dave_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
+        let raffle_num = 3;
 
+        // start the raffle
+        alice_starts_raffle(&mut client, &contract_id, raffle_num).await;
+
+        // dave participates
+        participates(&mut client, &contract_id, &ink_e2e::dave(), vec![5, 40, 8, 2]);
+        participates(&mut client, &contract_id, &ink_e2e::dave(), vec![3, 6, 7, 5]);
+        participates(&mut client, &contract_id, &ink_e2e::dave(), vec![12, 4, 6, 2]);
+        participates(&mut client, &contract_id, &ink_e2e::dave(), vec![15, 44, 4, 1]);
+        // same numbers are incorrect but it should not failed
+        participates(&mut client, &contract_id, &ink_e2e::dave(), vec![15, 44, 1, 1]);
+
+        // charlie participates
+        participates(&mut client, &contract_id, &ink_e2e::charlie(), vec![52, 3, 8, 2]);
+        participates(&mut client, &contract_id, &ink_e2e::charlie(), vec![34, 6, 2, 5]);
+        participates(&mut client, &contract_id, &ink_e2e::charlie(), vec![12, 4, 6, 4]);
+
+
+        // stop the raffle
+        alice_stops_raffle(&mut client, &contract_id).await;
+
+
+
+        let dave_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
+/*
         // data is received
         let response = RaffleResponseMessage {
             era: 13,
@@ -226,16 +177,16 @@ mod e2e_tests {
             output_value: response.encode(),
         };
         let actions = vec![HandleActionInput::Reply(payload.encode())];
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
-
+*/
         /*
                let result = client
                    .call_dry_run(&ink_e2e::bob(), &rollup_cond_eq, 0, None)
                    .await;
                assert_eq!(result.debug_message(), "e");
         */
-
+/*
         let result = client
             .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
             .await
@@ -244,13 +195,13 @@ mod e2e_tests {
         assert!(result.contains_event("Contracts", "ContractEmitted"));
 
         // test wrong era => meaning only 1 raffle by era
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
         let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
         assert!(result.is_err(), "Era must be sequential without blank");
 
         // and check if the data is filled
-        let get_next_era = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let get_next_era = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|contract| contract.get_next_era());
         let next_era = client
             .call_dry_run(&ink_e2e::charlie(), &get_next_era, 0, None)
@@ -277,12 +228,12 @@ mod e2e_tests {
         assert_eq!(1000000010, reward_manager_contract_balance);
 
         // check the balance of the raffle contract
-        let raffle_consumer_balance = client
-            .balance(contracts.raffle_consumer_account_id)
+        let lotto_contract_balance = client
+            .balance(contracts.lotto_contract_account_id)
             .await
             .expect("getting raffle contract balance failed");
 
-        assert_eq!(1000000000, raffle_consumer_balance);
+        assert_eq!(1000000000, lotto_contract_balance);
 
         // check the balance of dave
         let dave_balance_before_claim = client
@@ -320,108 +271,38 @@ mod e2e_tests {
             reward_manager_contract_balance_after_claim,
             reward_manager_contract_balance - 10
         );
-
+ */
         Ok(())
     }
 
-    #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
-    )]
-    async fn test_skip_raffle(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
-        // given
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
-
-        // grants the contracts
-        alice_configure_contracts(&mut client, &contracts).await;
-
-        // set the js code hash
-        alice_set_js_script_hash(&mut client, &contract_id).await;
-
-        // set the settings code hash
-        alice_set_settings_hash(&mut client, &contract_id).await;
-
-        // bob is granted as attestor
-        alice_grants_bob_as_attestor(&mut client, &contract_id).await;
-
-        // data is received
-        let response = RaffleResponseMessage {
-            era: 13,
-            skipped: true,
-            rewards: 0,
-            winners: [].to_vec(),
-        };
-
-        let payload = JsResponse {
-            js_script_hash: [1u8; 32],
-            input_hash: [3u8; 32],
-            settings_hash: [2u8; 32],
-            output_value: response.encode(),
-        };
-        let actions = vec![HandleActionInput::Reply(payload.encode())];
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
-
-        let result = client
-            .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
-            .await
-            .expect("rollup cond eq should be ok");
-        // two events : MessageProcessedTo and RaffleSkipped
-        assert!(result.contains_event("Contracts", "ContractEmitted"));
-
-        // and check if the data is filled
-        let get_next_era = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|contract| contract.get_next_era());
-        let next_era = client
-            .call_dry_run(&ink_e2e::charlie(), &get_next_era, 0, None)
-            .await
-            .return_value()
-            .expect("next era failed");
-
-        assert_eq!(14, next_era);
-
-        // test wrong era => meaning only 1 raffle by era
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
-        let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
-        assert!(result.is_err(), "Era must be sequential without blank");
-
-        Ok(())
-    }
 
     #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
+        additional_contracts = "contracts/lotto/Cargo.toml"
     )]
     async fn test_receive_error(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
         // given
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
-
-        // set the js code hash
-        alice_set_js_script_hash(&mut client, &contract_id).await;
-
-        // set the settings code hash
-        alice_set_settings_hash(&mut client, &contract_id).await;
+        let contract_id = alice_instantiates_contract(&mut client).await;
 
         // bob is granted as attestor
         alice_grants_bob_as_attestor(&mut client, &contract_id).await;
 
-        let input_data = RaffleRequestMessage {
-            era: 12,
-            nb_winners: 1,
-            excluded: [].to_vec(),
+        let raffle_num = 1;
+
+        let input_data = LottoRequestMessage {
+            requestor_id: contract_id.clone(),
+            draw_num: raffle_num,
+            request: Request::DrawNumbers(4, 1, 50),
         };
 
         // then a response is received
+        /*
         let error = vec![3u8; 5];
-        let payload = js_rollup_anchor::ResponseMessage::Error {
-            js_script_hash: [1u8; 32],
+        let payload = rollup_anchor::ResponseMessage::Error {
             input_value: input_data.encode(),
-            settings_hash: [2u8; 32],
             error,
         };
         let actions = vec![HandleActionInput::Reply(payload.encode())];
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
         let result = client
             .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
@@ -430,25 +311,20 @@ mod e2e_tests {
         // two events : MessageProcessedTo and ErrorReceived
         assert!(result.contains_event("Contracts", "ContractEmitted"));
 
+         */
+
         Ok(())
     }
 
     #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
+        additional_contracts = "contracts/lotto/Cargo.toml"
     )]
     async fn test_bad_attestor(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
         // given
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
-
-        // set the js code hash
-        alice_set_js_script_hash(&mut client, &contract_id).await;
-
-        // set the settings code hash
-        alice_set_settings_hash(&mut client, &contract_id).await;
+        let contract_id = alice_instantiates_contract(&mut client).await;
 
         // bob is not granted as attestor => it should not be able to send a message
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], vec![]));
         let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
         assert!(
@@ -460,7 +336,7 @@ mod e2e_tests {
         alice_grants_bob_as_attestor(&mut client, &contract_id).await;
 
         // then bob is able to send a message
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], vec![]));
         let result = client
             .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
@@ -473,82 +349,17 @@ mod e2e_tests {
     }
 
     #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
-    )]
-    async fn test_bad_hash(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
-        // given
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
-
-        // set the js code hash
-        alice_set_js_script_hash(&mut client, &contract_id).await;
-
-        // set the settings code hash
-        alice_set_settings_hash(&mut client, &contract_id).await;
-
-        // bob is granted as attestor
-        alice_grants_bob_as_attestor(&mut client, &contract_id).await;
-
-        // a response is received
-        let dave_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
-        let response = RaffleResponseMessage {
-            era: 12,
-            skipped: false,
-            rewards: 9958,
-            winners: [dave_address].to_vec(),
-        };
-        let payload = JsResponse {
-            js_script_hash: [9u8; 32],
-            input_hash: [3u8; 32],
-            settings_hash: [2u8; 32],
-            output_value: response.encode(),
-        };
-        let actions = vec![HandleActionInput::Reply(payload.encode())];
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
-        let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
-        assert!(
-            result.is_err(),
-            "We should not accept response with bad js code hash"
-        );
-
-        let payload = JsResponse {
-            js_script_hash: [1u8; 32],
-            input_hash: [3u8; 32],
-            settings_hash: [9u8; 32],
-            output_value: response.encode(),
-        };
-        let actions = vec![HandleActionInput::Reply(payload.encode())];
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
-        let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
-        assert!(
-            result.is_err(),
-            "We should not accept response with bad settings code hash"
-        );
-
-        Ok(())
-    }
-
-    #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
+        additional_contracts = "contracts/lotto/Cargo.toml"
     )]
     async fn test_bad_messages(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
         // given
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
-
-        // set the js code hash
-        alice_set_js_script_hash(&mut client, &contract_id).await;
-
-        // set the settings code hash
-        alice_set_settings_hash(&mut client, &contract_id).await;
+        let contract_id = alice_instantiates_contract(&mut client).await;
 
         // bob is granted as attestor
         alice_grants_bob_as_attestor(&mut client, &contract_id).await;
 
         let actions = vec![HandleActionInput::Reply(58u128.encode())];
-        let rollup_cond_eq = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
         let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
         assert!(
@@ -566,11 +377,10 @@ mod e2e_tests {
     /// Charlie is the sender (ie the payer)
     ///
     #[ink_e2e::test(
-        additional_contracts = "contracts/raffle_consumer/Cargo.toml contracts/reward_manager/Cargo.toml contracts/dapps_staking_developer/Cargo.toml"
+        additional_contracts = "contracts/lotto/Cargo.toml"
     )]
     async fn test_meta_tx_rollup_cond_eq(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
-        let contracts = alice_instantiates_contract(&mut client).await;
-        let contract_id = contracts.raffle_consumer_account_id;
+        let contract_id = alice_instantiates_contract(&mut client).await;
 
         // Bob is the attestor
         // use the ecsda account because we are not able to verify the sr25519 signature
@@ -579,7 +389,7 @@ mod e2e_tests {
         );
 
         // add the role => it should be succeed
-        let grant_role = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let grant_role = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.grant_role(ATTESTOR_ROLE, Some(from)));
         client
             .call(&ink_e2e::alice(), grant_role, 0, None)
@@ -588,7 +398,7 @@ mod e2e_tests {
 
         // prepare the meta transaction
         let data = RollupCondEqMethodParams::encode(&(vec![], vec![], vec![]));
-        let prepare_meta_tx = build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+        let prepare_meta_tx = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|oracle| oracle.prepare(from, data.clone()));
         let result = client
             .call(&ink_e2e::bob(), prepare_meta_tx, 0, None)
@@ -610,7 +420,7 @@ mod e2e_tests {
 
         // do the meta tx: charlie sends the message
         let meta_tx_rollup_cond_eq =
-            build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+            build_message::<lotto_contract::ContractRef>(contract_id.clone())
                 .call(|oracle| oracle.meta_tx_rollup_cond_eq(request.clone(), signature));
         client
             .call(&ink_e2e::charlie(), meta_tx_rollup_cond_eq, 0, None)
@@ -619,7 +429,7 @@ mod e2e_tests {
 
         // do it again => it must failed
         let meta_tx_rollup_cond_eq =
-            build_message::<raffle_consumer::ContractRef>(contract_id.clone())
+            build_message::<lotto_contract::ContractRef>(contract_id.clone())
                 .call(|oracle| oracle.meta_tx_rollup_cond_eq(request.clone(), signature));
         let result = client
             .call(&ink_e2e::charlie(), meta_tx_rollup_cond_eq, 0, None)

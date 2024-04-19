@@ -1,6 +1,6 @@
 use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
-use crate::traits::{Number, LOTTO_MANAGER_ROLE};
+use crate::traits::{Number, LOTTO_MANAGER_ROLE, RaffleId};
 use ink::prelude::vec::Vec;
 use ink::storage::Mapping;
 use ink::storage::traits::StorageLayout;
@@ -10,10 +10,10 @@ use openbrush::traits::{AccountId, Storage};
 #[derive(Default, Debug)]
 #[openbrush::storage_item]
 pub struct Data {
-    current_raffle: u32,
+    current_raffle_id: RaffleId,
     status: Status,
-    results: Mapping<u32, Vec<Number>>,
-    winners: Mapping<u32, Vec<AccountId>>,
+    results: Mapping<RaffleId, Vec<Number>>,
+    winners: Mapping<RaffleId, Vec<AccountId>>,
 }
 
 #[derive(Default, Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
@@ -32,7 +32,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
 
     #[ink(message)]
     #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
-    fn start_raffle(&mut self, num_raffle: u32) -> Result<(), RaffleError> {
+    fn start_new_raffle(&mut self) -> Result<RaffleId, RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::NotStarted
             && self.data::<Data>().status != Status::Closed
@@ -40,9 +40,11 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
             return Err(RaffleError::IncorrectStatus);
         }
 
-        self.data::<Data>().current_raffle = num_raffle;
+        let new_raffle_id = self.data::<Data>().current_raffle_id + 1;
+        self.data::<Data>().current_raffle_id = new_raffle_id;
         self.data::<Data>().status = Status::Ongoing;
-        Ok(())
+
+        Ok(new_raffle_id)
     }
 
     fn stop_raffle(&mut self) -> Result<(), RaffleError> {
@@ -56,8 +58,8 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
     }
 
     #[ink(message)]
-    fn get_current_raffle(&self) -> u32 {
-        self.data::<Data>().current_raffle
+    fn get_current_raffle_id(&self) -> RaffleId {
+        self.data::<Data>().current_raffle_id
     }
 
     #[ink(message)]
@@ -66,23 +68,23 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
     }
 
     #[ink(message)]
-    fn get_results(&self, num_raffle: u32) -> Option<Vec<Number>> {
-        self.data::<Data>().results.get(num_raffle)
+    fn get_results(&self, raffle_id: RaffleId) -> Option<Vec<Number>> {
+        self.data::<Data>().results.get(raffle_id)
     }
 
     #[ink(message)]
-    fn get_winners(&self, num_raffle: u32) -> Option<Vec<AccountId>> {
-        self.data::<Data>().winners.get(num_raffle)
+    fn get_winners(&self, raffle_id: RaffleId) -> Option<Vec<AccountId>> {
+        self.data::<Data>().winners.get(raffle_id)
     }
 
     fn set_results(
         &mut self,
-        num_raffle: u32,
+        raffle_id: RaffleId,
         results: Vec<Number>,
     ) -> Result<(), RaffleError> {
 
         // check the raffle number
-        if self.data::<Data>().current_raffle != num_raffle {
+        if self.data::<Data>().current_raffle_id != raffle_id {
             return Err(RaffleError::IncorrectRaffle);
         }
 
@@ -91,13 +93,13 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
             return Err(RaffleError::IncorrectStatus);
         }
 
-        match self.data::<Data>().results.get(num_raffle) {
+        match self.data::<Data>().results.get(raffle_id) {
             Some(_) => Err(ExistingResults),
             None => {
                 // save the result
-                self.data::<Data>().results.insert(num_raffle, &results);
+                self.data::<Data>().results.insert(raffle_id, &results);
                 // emmit the event
-                self.emit_results(num_raffle, results);
+                self.emit_results(raffle_id, results);
                 // update the status
                 self.data::<Data>().status = Status::WaitingWinners;
                 Ok(())
@@ -107,12 +109,12 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
 
     fn set_winners(
         &mut self,
-        num_raffle: u32,
+        raffle_id: RaffleId,
         winners: Vec<AccountId>,
     ) -> Result<(), RaffleError> {
 
         // check the raffle number
-        if self.data::<Data>().current_raffle != num_raffle {
+        if self.data::<Data>().current_raffle_id != raffle_id {
             return Err(RaffleError::IncorrectRaffle);
         }
 
@@ -121,13 +123,13 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
             return Err(RaffleError::IncorrectStatus);
         }
 
-        match self.data::<Data>().winners.get(num_raffle) {
+        match self.data::<Data>().winners.get(raffle_id) {
             Some(_) => Err(ExistingWinners),
             None => {
                 // save the result
-                self.data::<Data>().winners.insert(num_raffle, &winners);
+                self.data::<Data>().winners.insert(raffle_id, &winners);
                 // emmit the event
-                self.emit_winners(num_raffle, winners);
+                self.emit_winners(raffle_id, winners);
                 // update the status
                 self.data::<Data>().status = Status::Closed;
                 Ok(())
@@ -143,10 +145,10 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         }
 
         let participant = Self::env().caller();
-        let num_raffle = self.data::<Data>().current_raffle;
+        let raffle_id = self.data::<Data>().current_raffle_id;
 
         // save the participant with an event
-        self.emit_participation_registered(num_raffle, participant, numbers);
+        self.emit_participation_registered(raffle_id, participant, numbers);
 
         Ok(())
     }
@@ -156,10 +158,10 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
 pub trait Internal {
     fn emit_participation_registered(
         &self,
-        num_raffle: u32,
+        raffle_id: RaffleId,
         participant: AccountId,
         numbers: Vec<Number>,
     );
-    fn emit_results(&self, num_raffle: u32, result: Vec<Number>);
-    fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>);
+    fn emit_results(&self, raffle_id: RaffleId, result: Vec<Number>);
+    fn emit_winners(&self, raffle_id: RaffleId, winners: Vec<AccountId>);
 }

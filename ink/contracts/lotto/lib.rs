@@ -11,7 +11,7 @@ pub mod lotto_contract {
     use openbrush::{modifiers, traits::Storage};
 
     use lotto::traits::{
-        config, config::*, error::*, raffle, raffle::*, Number, LOTTO_MANAGER_ROLE,
+        config, config::*, error::*, raffle, raffle::*, Number, RaffleId, LOTTO_MANAGER_ROLE,
     };
 
     use phat_rollup_anchor_ink::traits::{
@@ -22,7 +22,7 @@ pub mod lotto_contract {
     #[ink(event)]
     pub struct ParticipationRegistered {
         #[ink(topic)]
-        num_raffle: u32,
+        raffle_id: RaffleId,
         #[ink(topic)]
         participant: AccountId,
         numbers: Vec<Number>,
@@ -32,21 +32,21 @@ pub mod lotto_contract {
     #[ink(event)]
     pub struct RaffleStarted {
         #[ink(topic)]
-        num_raffle: u32,
+        raffle_id: RaffleId,
     }
 
     /// Event emitted when the raffle is ended
     #[ink(event)]
     pub struct RaffleEnded {
         #[ink(topic)]
-        num_raffle: u32,
+        raffle_id: RaffleId,
     }
 
     /// Event emitted when the raffle result is received
     #[ink(event)]
     pub struct ResultReceived {
         #[ink(topic)]
-        num_raffle: u32,
+        raffle_id: RaffleId,
         numbers: Vec<Number>,
     }
 
@@ -54,7 +54,7 @@ pub mod lotto_contract {
     #[ink(event)]
     pub struct WinnersRevealed {
         #[ink(topic)]
-        num_raffle: u32,
+        raffle_id: RaffleId,
         winners: Vec<AccountId>,
     }
 
@@ -62,7 +62,7 @@ pub mod lotto_contract {
     #[ink(event)]
     pub struct ErrorReceived {
         #[ink(topic)]
-        num_raffle: u32,
+        raffle_id: RaffleId,
         /// error
         error: Vec<u8>,
     }
@@ -122,12 +122,10 @@ pub mod lotto_contract {
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
     pub struct LottoRequestMessage {
-        /// id of the requestor
-        requestor_id: AccountId,
-        /// lotto_draw number
-        draw_num: u32,
+        /// raffle id
+        pub raffle_id: RaffleId,
         /// request
-        request: Request,
+        pub request: Request,
     }
 
     #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
@@ -150,9 +148,9 @@ pub mod lotto_contract {
     #[derive(scale::Encode, scale::Decode)]
     struct LottoResponseMessage {
         /// initial request
-        request: LottoRequestMessage,
+        pub request: LottoRequestMessage,
         /// response
-        response: Response,
+        pub response: Response,
     }
 
     #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
@@ -236,13 +234,11 @@ pub mod lotto_contract {
             Raffle::stop_raffle(self)?;
 
             // request the draw numbers
-            let requestor_id = Self::env().account_id();
-            let draw_num = Raffle::get_current_raffle(self);
+            let raffle_id = Raffle::get_current_raffle_id(self);
             let config = RaffleConfig::ensure_config(self)?;
 
             let message = LottoRequestMessage {
-                requestor_id,
-                draw_num,
+                raffle_id,
                 request: Request::DrawNumbers(
                     config.nb_numbers,
                     config.min_number,
@@ -256,22 +252,18 @@ pub mod lotto_contract {
 
         fn inner_set_results(
             &mut self,
-            num_raffle: u32,
+            raffle_id: RaffleId,
             numbers: Vec<Number>,
         ) -> Result<(), ContractError> {
             // check if the numbers are correct
             RaffleConfig::check_numbers(self, &numbers)?;
 
             // set the result
-            Raffle::set_results(self, num_raffle, numbers.clone())?;
+            Raffle::set_results(self, raffle_id, numbers.clone())?;
 
             // request to check the winners
-            let requestor_id = Self::env().account_id();
-            let draw_num = self.get_current_raffle();
-
             let message = LottoRequestMessage {
-                requestor_id,
-                draw_num,
+                raffle_id,
                 request: Request::CheckWinners(numbers),
             };
             self.push_message(&message)?;
@@ -281,10 +273,10 @@ pub mod lotto_contract {
 
         pub fn inner_set_winners(
             &mut self,
-            num_raffle: u32,
+            raffle_id: RaffleId,
             winners: Vec<AccountId>,
         ) -> Result<(), ContractError> {
-            Raffle::set_winners(self, num_raffle, winners)?;
+            Raffle::set_winners(self, raffle_id, winners)?;
             Ok(())
         }
 
@@ -296,17 +288,17 @@ pub mod lotto_contract {
             let message: LottoResponseMessage = scale::Decode::decode(&mut &action[..])
                 .or(Err(RollupAnchorError::FailedToDecode))?;
 
-            let num_raffle = message.request.draw_num;
+            let raffle_id = message.request.raffle_id;
 
             match message.response {
                 Response::Numbers(numbers) => self
-                    .inner_set_results(num_raffle, numbers)
+                    .inner_set_results(raffle_id, numbers)
                     .or(Err(RollupAnchorError::UnsupportedAction))?,
                 Response::Winners(winners) => self
-                    .inner_set_winners(num_raffle, winners)
+                    .inner_set_winners(raffle_id, winners)
                     .or(Err(RollupAnchorError::UnsupportedAction))?,
                 Response::Error(error) => {
-                    self.env().emit_event(ErrorReceived { num_raffle, error })
+                    self.env().emit_event(ErrorReceived { raffle_id, error })
                 }
             }
 
@@ -317,30 +309,30 @@ pub mod lotto_contract {
     impl raffle::Internal for Contract {
         fn emit_participation_registered(
             &self,
-            num_raffle: u32,
+            raffle_id: RaffleId,
             participant: AccountId,
             numbers: Vec<Number>,
         ) {
             // emit the event
             self.env().emit_event(ParticipationRegistered {
-                num_raffle,
+                raffle_id,
                 participant,
                 numbers,
             });
         }
 
-        fn emit_results(&self, num_raffle: u32, numbers: Vec<Number>) {
+        fn emit_results(&self, raffle_id: RaffleId, numbers: Vec<Number>) {
             // emit the event
             self.env().emit_event(ResultReceived {
-                num_raffle,
+                raffle_id,
                 numbers,
             });
         }
 
-        fn emit_winners(&self, num_raffle: u32, winners: Vec<AccountId>) {
+        fn emit_winners(&self, raffle_id: RaffleId, winners: Vec<AccountId>) {
             // emit the event
             self.env().emit_event(WinnersRevealed {
-                num_raffle,
+                raffle_id,
                 winners,
             });
         }
