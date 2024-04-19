@@ -3,17 +3,14 @@
 #[openbrush::implementation(Ownable, AccessControl, Upgradeable)]
 #[openbrush::contract]
 pub mod lotto_contract {
-
     use ink::codegen::{EmitEvent, Env};
     use ink::prelude::vec::Vec;
+    use lotto::traits::{
+        config, config::*, error::*, LOTTO_MANAGER_ROLE, Number, raffle, raffle::*, RaffleId,
+    };
+    use openbrush::{modifiers, traits::Storage};
     use openbrush::contracts::access_control::*;
     use openbrush::contracts::ownable::*;
-    use openbrush::{modifiers, traits::Storage};
-
-    use lotto::traits::{
-        config, config::*, error::*, raffle, raffle::*, Number, RaffleId, LOTTO_MANAGER_ROLE,
-    };
-
     use phat_rollup_anchor_ink::traits::{
         meta_transaction, meta_transaction::*, rollup_anchor, rollup_anchor::*,
     };
@@ -56,15 +53,6 @@ pub mod lotto_contract {
         #[ink(topic)]
         raffle_id: RaffleId,
         winners: Vec<AccountId>,
-    }
-
-    /// Event emitted when an error is received
-    #[ink(event)]
-    pub struct ErrorReceived {
-        #[ink(topic)]
-        raffle_id: RaffleId,
-        /// error
-        error: Vec<u8>,
     }
 
     /// Errors occurred in the contract
@@ -163,8 +151,6 @@ pub mod lotto_contract {
         Numbers(Vec<Number>),
         /// list of winners
         Winners(Vec<AccountId>),
-        /// when an error occurs
-        Error(Vec<u8>),
     }
 
     /// Contract storage
@@ -297,9 +283,6 @@ pub mod lotto_contract {
                 Response::Winners(winners) => self
                     .inner_set_winners(raffle_id, winners)
                     .or(Err(RollupAnchorError::UnsupportedAction))?,
-                Response::Error(error) => {
-                    self.env().emit_event(ErrorReceived { raffle_id, error })
-                }
             }
 
             Ok(())

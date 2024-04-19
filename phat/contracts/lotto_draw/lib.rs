@@ -15,7 +15,6 @@ mod lotto_draw {
     use serde_json_core;
     use sp_core::crypto::{AccountId32, Ss58Codec};
 
-
     pub type RaffleId = u32;
     pub type Number = u16;
 
@@ -68,8 +67,6 @@ mod lotto_draw {
         Numbers(Vec<Number>),
         /// list of winners
         Winners(Vec<AccountId>),
-        /// when an error occurs
-        Error(Vec<u8>),
     }
 
     /// DTO use for serializing and deserializing the json
@@ -303,25 +300,17 @@ mod lotto_draw {
 
         fn handle_request(&self, message: LottoRequestMessage) -> Result<LottoResponseMessage> {
             let response = match message.request {
-                Request::DrawNumbers(nb_numbers, smallest_number, biggest_number) => {
-                    let result = self.inner_get_numbers(
+                Request::DrawNumbers(nb_numbers, smallest_number, biggest_number) => self
+                    .inner_get_numbers(
                         message.raffle_id,
                         nb_numbers,
                         smallest_number,
                         biggest_number,
-                    );
-                    match result {
-                        Ok(numbers) => Response::Numbers(numbers),
-                        Err(e) => Response::Error(e.encode()),
-                    }
-                }
-                Request::CheckWinners(ref numbers) => {
-                    let result = self.inner_get_winners(message.raffle_id, numbers);
-                    match result {
-                        Ok(winners) => Response::Winners(winners),
-                        Err(e) => Response::Error(e.encode()),
-                    }
-                }
+                    )
+                    .map(Response::Numbers)?,
+                Request::CheckWinners(ref numbers) => self
+                    .inner_get_winners(message.raffle_id, numbers)
+                    .map(Response::Winners)?,
             };
 
             Ok(LottoResponseMessage {
@@ -340,12 +329,7 @@ mod lotto_draw {
             biggest_number: Number,
         ) -> Result<Vec<Number>> {
             self.ensure_owner()?;
-            self.inner_get_numbers(
-                raffle_id,
-                nb_numbers,
-                smallest_number,
-                biggest_number,
-            )
+            self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
         }
 
         fn inner_get_numbers(
@@ -658,12 +642,7 @@ mod lotto_draw {
             let biggest_number = 50;
 
             let result = lotto
-                .get_numbers(
-                    raffle_id,
-                    nb_numbers,
-                    smallest_number,
-                    biggest_number,
-                )
+                .get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
                 .unwrap();
             assert_eq!(nb_numbers as usize, result.len());
             for &n in result.iter() {
@@ -687,12 +666,7 @@ mod lotto_draw {
             let biggest_number = 5;
 
             let result = lotto
-                .get_numbers(
-                    raffle_id,
-                    nb_numbers,
-                    smallest_number,
-                    biggest_number,
-                )
+                .get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
                 .unwrap();
             assert_eq!(nb_numbers as usize, result.len());
             for &n in result.iter() {

@@ -459,40 +459,6 @@ mod e2e_tests {
     }
 
     #[ink_e2e::test(additional_contracts = "contracts/lotto/Cargo.toml")]
-    async fn test_receive_error(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
-        // given
-        let contract_id = alice_instantiates_contract(&mut client).await;
-
-        // bob is granted as attestor
-        alice_grants_bob_as_attestor(&mut client, &contract_id).await;
-
-        // then a response is received
-        let raffle_id = 1;
-
-        let request = LottoRequestMessage {
-            raffle_id,
-            request: Request::DrawNumbers(4, 1, 50),
-        };
-
-        let payload = LottoResponseMessage {
-            request,
-            response: Response::Error(vec![3u8; 5]),
-        };
-
-        let actions = vec![HandleActionInput::Reply(payload.encode())];
-        let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
-        let result = client
-            .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
-            .await
-            .expect("we should proceed error message");
-        // two events : MessageProcessedTo and ErrorReceived
-        assert!(result.contains_event("Contracts", "ContractEmitted"));
-
-        Ok(())
-    }
-
-    #[ink_e2e::test(additional_contracts = "contracts/lotto/Cargo.toml")]
     async fn test_bad_attestor(mut client: ink_e2e::Client<C, E>) -> E2EResult<()> {
         // given
         let contract_id = alice_instantiates_contract(&mut client).await;
