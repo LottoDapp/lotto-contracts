@@ -2,5 +2,5 @@
 members = [
     "logics",
     "contracts/lotto",
-    #"integration_tests",
+    "integration_tests",
 ]
