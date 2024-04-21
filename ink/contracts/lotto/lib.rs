@@ -193,17 +193,6 @@ pub mod lotto_contract {
         }
 
         #[ink(message)]
-        #[modifiers(only_role(DEFAULT_ADMIN_ROLE))]
-        pub fn terminate_me(&mut self) -> Result<(), ContractError> {
-            self.env().terminate_contract(self.env().caller());
-        }
-
-        #[ink(message)]
-        pub fn get_manager_role(&self) -> RoleType {
-            LOTTO_MANAGER_ROLE
-        }
-
-        #[ink(message)]
         pub fn participate(&mut self, numbers: Vec<Number>) -> Result<(), ContractError> {
             // check if the numbers are correct
             RaffleConfig::check_numbers(self, &numbers)?;
@@ -228,7 +217,7 @@ pub mod lotto_contract {
                 request: Request::DrawNumbers(
                     config.nb_numbers,
                     config.min_number,
-                    config.min_number,
+                    config.max_number,
                 ),
             };
             RollupAnchor::push_message(self, &message)?;
@@ -264,6 +253,32 @@ pub mod lotto_contract {
         ) -> Result<(), ContractError> {
             Raffle::set_winners(self, raffle_id, winners)?;
             Ok(())
+        }
+
+        #[ink(message)]
+        #[modifiers(only_role(DEFAULT_ADMIN_ROLE))]
+        pub fn register_attestor(
+            &mut self,
+            account_id: AccountId,
+        ) -> Result<(), AccessControlError> {
+            AccessControl::grant_role(self, ATTESTOR_ROLE, Some(account_id))?;
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub fn get_attestor_role(&self) -> RoleType {
+            ATTESTOR_ROLE
+        }
+
+        #[ink(message)]
+        pub fn get_manager_role(&self) -> RoleType {
+            LOTTO_MANAGER_ROLE
+        }
+
+        #[ink(message)]
+        #[modifiers(only_role(DEFAULT_ADMIN_ROLE))]
+        pub fn terminate_me(&mut self) -> Result<(), ContractError> {
+            self.env().terminate_contract(self.env().caller());
         }
 
     }
@@ -324,6 +339,7 @@ pub mod lotto_contract {
     /// Event emitted when a message is pushed in the queue
     #[ink(event)]
     pub struct MessageQueued {
+        #[ink(topic)]
         id: u32,
         data: Vec<u8>,
     }
@@ -331,6 +347,7 @@ pub mod lotto_contract {
     /// Event emitted when a message is processed
     #[ink(event)]
     pub struct MessageProcessedTo {
+        #[ink(topic)]
         id: u32,
     }
 
@@ -345,11 +362,15 @@ pub mod lotto_contract {
 
     /// Event emitted when a Meta Tx is decoded
     #[ink(event)]
-    pub struct MetaTxDecoded {}
+    pub struct MetaTxDecoded {
+        #[ink(topic)]
+        contract_id: AccountId,
+    }
 
     impl meta_transaction::EventBroadcaster for Contract {
         fn emit_event_meta_tx_decoded(&self) {
-            self.env().emit_event(MetaTxDecoded {});
+            let contract_id = self.env().account_id();
+            self.env().emit_event(MetaTxDecoded {contract_id});
         }
     }
 }
