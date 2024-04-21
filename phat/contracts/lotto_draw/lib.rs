@@ -319,6 +319,17 @@ mod lotto_draw {
             })
         }
 
+        /// Simulate the request (admin only - for dev purpose)
+        #[ink(message)]
+        pub fn simulate_handle_request(
+            &self,
+            request: LottoRequestMessage
+        ) -> Result<Vec<u8>> {
+            self.ensure_owner()?;
+            let response = self.handle_request(request)?;
+            Ok(response.encode())
+        }
+
         /// Simulate and return numbers for the lotto_draw (admin only - for dev purpose)
         #[ink(message)]
         pub fn get_numbers(
