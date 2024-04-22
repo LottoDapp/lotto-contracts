@@ -1,0 +1,1766 @@
+{
+  "source": {
+    "hash": "0x0ec06a0c49103527a34341f7d6217cc48f99ecfb8cc759dfb48fbbd0cfe0caf6",
+    "language": "ink! 4.3.0",
+    "compiler": "rustc 1.76.0",
+    "build_info": {
+      "build_mode": "Debug",
+      "cargo_contract_version": "3.2.0",
+      "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
+      "wasm_opt_settings": {
+        "keep_debug_symbols": false,
+        "optimization_passes": "Z"
+      }
+    }
+  },
+  "contract": {
+    "name": "lotto_draw",
+    "version": "0.0.1",
+    "authors": [
+      "GuiGou"
+    ]
+  },
+  "spec": {
+    "constructors": [
+      {
+        "args": [],
+        "default": false,
+        "docs": [],
+        "label": "default",
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink_primitives",
+            "ConstructorResult"
+          ],
+          "type": 4
+        },
+        "selector": "0xed4b9d1b"
+      }
+    ],
+    "docs": [],
+    "environment": {
+      "accountId": {
+        "displayName": [
+          "AccountId"
+        ],
+        "type": 0
+      },
+      "balance": {
+        "displayName": [
+          "Balance"
+        ],
+        "type": 34
+      },
+      "blockNumber": {
+        "displayName": [
+          "BlockNumber"
+        ],
+        "type": 23
+      },
+      "chainExtension": {
+        "displayName": [
+          "ChainExtension"
+        ],
+        "type": 37
+      },
+      "hash": {
+        "displayName": [
+          "Hash"
+        ],
+        "type": 35
+      },
+      "maxEventTopics": 4,
+      "timestamp": {
+        "displayName": [
+          "Timestamp"
+        ],
+        "type": 36
+      }
+    },
+    "events": [],
+    "lang_error": {
+      "displayName": [
+        "ink",
+        "LangError"
+      ],
+      "type": 6
+    },
+    "messages": [
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Gets the owner of the contract"
+        ],
+        "label": "owner",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 7
+        },
+        "selector": "0xfeaea4fa"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Gets the attestor address used by this rollup"
+        ],
+        "label": "get_attest_address",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 8
+        },
+        "selector": "0xa29595ff"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Gets the ecdsa address used by this rollup in the meta transaction"
+        ],
+        "label": "get_attest_ecdsa_address",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 8
+        },
+        "selector": "0x4620f939"
+      },
+      {
+        "args": [
+          {
+            "label": "attest_key",
+            "type": {
+              "displayName": [
+                "Option"
+              ],
+              "type": 10
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Set attestor key.",
+          "",
+          " For dev purpose. (admin only)"
+        ],
+        "label": "set_attest_key",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 11
+        },
+        "selector": "0x85cb106e"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Gets the sender address used by this rollup (in case of meta-transaction)"
+        ],
+        "label": "get_sender_address",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 14
+        },
+        "selector": "0x75de500c"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Gets the config of the target consumer contract"
+        ],
+        "label": "get_target_contract",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 15
+        },
+        "selector": "0x0d425434"
+      },
+      {
+        "args": [
+          {
+            "label": "rpc",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "pallet_id",
+            "type": {
+              "displayName": [
+                "u8"
+              ],
+              "type": 2
+            }
+          },
+          {
+            "label": "call_id",
+            "type": {
+              "displayName": [
+                "u8"
+              ],
+              "type": 2
+            }
+          },
+          {
+            "label": "contract_id",
+            "type": {
+              "displayName": [
+                "Vec"
+              ],
+              "type": 9
+            }
+          },
+          {
+            "label": "sender_key",
+            "type": {
+              "displayName": [
+                "Option"
+              ],
+              "type": 10
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Configures the target consumer contract (admin only)"
+        ],
+        "label": "config_target_contract",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 11
+        },
+        "selector": "0x8b9485bf"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Gets the config to target the indexer"
+        ],
+        "label": "get_indexer_url",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 18
+        },
+        "selector": "0xb7f24d9f"
+      },
+      {
+        "args": [
+          {
+            "label": "indexer_url",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Configures the indexer (admin only)"
+        ],
+        "label": "config_indexer",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 11
+        },
+        "selector": "0xa7d92be0"
+      },
+      {
+        "args": [
+          {
+            "label": "new_owner",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Transfers the ownership of the contract (admin only)"
+        ],
+        "label": "transfer_ownership",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 11
+        },
+        "selector": "0x107e33ea"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Processes a request by a rollup transaction"
+        ],
+        "label": "answer_request",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 20
+        },
+        "selector": "0x2a5bcd75"
+      },
+      {
+        "args": [
+          {
+            "label": "request",
+            "type": {
+              "displayName": [
+                "LottoRequestMessage"
+              ],
+              "type": 22
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Simulate the request (admin only - for dev purpose)"
+        ],
+        "label": "simulate_handle_request",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0x2babdad7"
+      },
+      {
+        "args": [
+          {
+            "label": "raffle_id",
+            "type": {
+              "displayName": [
+                "RaffleId"
+              ],
+              "type": 23
+            }
+          },
+          {
+            "label": "nb_numbers",
+            "type": {
+              "displayName": [
+                "u8"
+              ],
+              "type": 2
+            }
+          },
+          {
+            "label": "smallest_number",
+            "type": {
+              "displayName": [
+                "Number"
+              ],
+              "type": 25
+            }
+          },
+          {
+            "label": "biggest_number",
+            "type": {
+              "displayName": [
+                "Number"
+              ],
+              "type": 25
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Simulate and return numbers for the lotto_draw (admin only - for dev purpose)"
+        ],
+        "label": "get_numbers",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 29
+        },
+        "selector": "0x6e2df655"
+      },
+      {
+        "args": [
+          {
+            "label": "draw_num",
+            "type": {
+              "displayName": [
+                "u32"
+              ],
+              "type": 23
+            }
+          },
+          {
+            "label": "numbers",
+            "type": {
+              "displayName": [
+                "Vec"
+              ],
+              "type": 26
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Simulate and return the winners (admin only - for dev purpose)"
+        ],
+        "label": "get_winners",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 31
+        },
+        "selector": "0xc51514c9"
+      }
+    ]
+  },
+  "storage": {
+    "root": {
+      "layout": {
+        "struct": {
+          "fields": [
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "owner"
+            },
+            {
+              "layout": {
+                "enum": {
+                  "dispatchKey": "0x00000000",
+                  "name": "Option",
+                  "variants": {
+                    "0": {
+                      "fields": [],
+                      "name": "None"
+                    },
+                    "1": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "struct": {
+                              "fields": [
+                                {
+                                  "layout": {
+                                    "leaf": {
+                                      "key": "0x00000000",
+                                      "ty": 3
+                                    }
+                                  },
+                                  "name": "rpc"
+                                },
+                                {
+                                  "layout": {
+                                    "leaf": {
+                                      "key": "0x00000000",
+                                      "ty": 2
+                                    }
+                                  },
+                                  "name": "pallet_id"
+                                },
+                                {
+                                  "layout": {
+                                    "leaf": {
+                                      "key": "0x00000000",
+                                      "ty": 2
+                                    }
+                                  },
+                                  "name": "call_id"
+                                },
+                                {
+                                  "layout": {
+                                    "array": {
+                                      "layout": {
+                                        "leaf": {
+                                          "key": "0x00000000",
+                                          "ty": 2
+                                        }
+                                      },
+                                      "len": 32,
+                                      "offset": "0x00000000"
+                                    }
+                                  },
+                                  "name": "contract_id"
+                                },
+                                {
+                                  "layout": {
+                                    "enum": {
+                                      "dispatchKey": "0x00000000",
+                                      "name": "Option",
+                                      "variants": {
+                                        "0": {
+                                          "fields": [],
+                                          "name": "None"
+                                        },
+                                        "1": {
+                                          "fields": [
+                                            {
+                                              "layout": {
+                                                "array": {
+                                                  "layout": {
+                                                    "leaf": {
+                                                      "key": "0x00000000",
+                                                      "ty": 2
+                                                    }
+                                                  },
+                                                  "len": 32,
+                                                  "offset": "0x00000000"
+                                                }
+                                              },
+                                              "name": "0"
+                                            }
+                                          ],
+                                          "name": "Some"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "name": "sender_key"
+                                }
+                              ],
+                              "name": "Config"
+                            }
+                          },
+                          "name": "0"
+                        }
+                      ],
+                      "name": "Some"
+                    }
+                  }
+                }
+              },
+              "name": "consumer_config"
+            },
+            {
+              "layout": {
+                "enum": {
+                  "dispatchKey": "0x00000000",
+                  "name": "Option",
+                  "variants": {
+                    "0": {
+                      "fields": [],
+                      "name": "None"
+                    },
+                    "1": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x00000000",
+                              "ty": 3
+                            }
+                          },
+                          "name": "0"
+                        }
+                      ],
+                      "name": "Some"
+                    }
+                  }
+                }
+              },
+              "name": "indexer_url"
+            },
+            {
+              "layout": {
+                "array": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x00000000",
+                      "ty": 2
+                    }
+                  },
+                  "len": 32,
+                  "offset": "0x00000000"
+                }
+              },
+              "name": "attest_key"
+            }
+          ],
+          "name": "Lotto"
+        }
+      },
+      "root_key": "0x00000000"
+    }
+  },
+  "types": [
+    {
+      "id": 0,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "AccountId"
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "type": {
+        "def": {
+          "array": {
+            "len": 32,
+            "type": 2
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": {
+        "def": {
+          "primitive": "u8"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": {
+        "def": {
+          "primitive": "str"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 5
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 5
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "type": {
+        "def": {
+          "tuple": []
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 1,
+                "name": "CouldNotReadInput"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "LangError"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 0
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 0
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 2
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 12
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 5
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 13
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 5
+          },
+          {
+            "name": "E",
+            "type": 13
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "BadOrigin"
+              },
+              {
+                "index": 1,
+                "name": "ClientNotConfigured"
+              },
+              {
+                "index": 2,
+                "name": "InvalidKeyLength"
+              },
+              {
+                "index": 3,
+                "name": "InvalidAddressLength"
+              },
+              {
+                "index": 4,
+                "name": "NoRequestInQueue"
+              },
+              {
+                "index": 5,
+                "name": "FailedToCreateClient"
+              },
+              {
+                "index": 6,
+                "name": "FailedToCommitTx"
+              },
+              {
+                "index": 7,
+                "name": "FailedToCallRollup"
+              },
+              {
+                "index": 8,
+                "name": "NoNumber"
+              },
+              {
+                "index": 9,
+                "name": "IndexerNotConfigured"
+              },
+              {
+                "index": 10,
+                "name": "HttpRequestFailed"
+              },
+              {
+                "index": 11,
+                "name": "InvalidResponseBody"
+              },
+              {
+                "index": 12,
+                "name": "InvalidSs58Address"
+              },
+              {
+                "index": 13,
+                "name": "MinGreaterThanMax"
+              },
+              {
+                "index": 14,
+                "name": "AddOverFlow"
+              },
+              {
+                "index": 15,
+                "name": "SubOverFlow"
+              }
+            ]
+          }
+        },
+        "path": [
+          "lotto_draw",
+          "lotto_draw",
+          "ContractError"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 10
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 10
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 16
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 16
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 17
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 17
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "type": {
+        "def": {
+          "tuple": [
+            3,
+            2,
+            2,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 19
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 19
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 3
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 3
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 21
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 10
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 13
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 10
+          },
+          {
+            "name": "E",
+            "type": 13
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "raffle_id",
+                "type": 23,
+                "typeName": "RaffleId"
+              },
+              {
+                "name": "request",
+                "type": 24,
+                "typeName": "Request"
+              }
+            ]
+          }
+        },
+        "path": [
+          "lotto_draw",
+          "lotto_draw",
+          "LottoRequestMessage"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "type": {
+        "def": {
+          "primitive": "u32"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 2,
+                    "typeName": "u8"
+                  },
+                  {
+                    "type": 25,
+                    "typeName": "Number"
+                  },
+                  {
+                    "type": 25,
+                    "typeName": "Number"
+                  }
+                ],
+                "index": 0,
+                "name": "DrawNumbers"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 26,
+                    "typeName": "Vec<Number>"
+                  }
+                ],
+                "index": 1,
+                "name": "CheckWinners"
+              }
+            ]
+          }
+        },
+        "path": [
+          "lotto_draw",
+          "lotto_draw",
+          "Request"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "def": {
+          "primitive": "u16"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 25
+          }
+        }
+      }
+    },
+    {
+      "id": 27,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 28
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 28
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 13
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          },
+          {
+            "name": "E",
+            "type": 13
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 30
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 30
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 26
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 13
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 26
+          },
+          {
+            "name": "E",
+            "type": 13
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 32
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 32
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 33
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 13
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 33
+          },
+          {
+            "name": "E",
+            "type": 13
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 0
+          }
+        }
+      }
+    },
+    {
+      "id": 34,
+      "type": {
+        "def": {
+          "primitive": "u128"
+        }
+      }
+    },
+    {
+      "id": 35,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "Hash"
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "type": {
+        "def": {
+          "primitive": "u64"
+        }
+      }
+    },
+    {
+      "id": 37,
+      "type": {
+        "def": {
+          "variant": {}
+        },
+        "path": [
+          "pink_extension",
+          "chain_extension",
+          "PinkExt"
+        ]
+      }
+    }
+  ],
+  "version": "4"
+}
