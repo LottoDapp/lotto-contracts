@@ -1,10 +1,9 @@
 use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
-use crate::traits::{Number, LOTTO_MANAGER_ROLE, RaffleId};
+use crate::traits::{Number, RaffleId};
 use ink::prelude::vec::Vec;
-use ink::storage::Mapping;
 use ink::storage::traits::StorageLayout;
-use openbrush::contracts::access_control::access_control;
+use ink::storage::Mapping;
 use openbrush::traits::{AccountId, Storage};
 
 #[derive(Default, Debug)]
@@ -28,10 +27,9 @@ pub enum Status {
 }
 
 #[openbrush::trait_definition]
-pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
+pub trait Raffle: Storage<Data> {
 
-    #[ink(message)]
-    #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
+    /// Start a new raffle
     fn start_new_raffle(&mut self) -> Result<RaffleId, RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::NotStarted
@@ -47,6 +45,7 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         Ok(new_raffle_id)
     }
 
+    /// Stop the current raffle
     fn stop_current_raffle(&mut self) -> Result<(), RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::Ongoing {
@@ -77,12 +76,12 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         self.data::<Data>().winners.get(raffle_id)
     }
 
+    /// save the results for the current raffle.
     fn set_results(
         &mut self,
         raffle_id: RaffleId,
         results: Vec<Number>,
     ) -> Result<(), RaffleError> {
-
         // check the raffle number
         if self.data::<Data>().current_raffle_id != raffle_id {
             return Err(RaffleError::IncorrectRaffle);
@@ -96,10 +95,8 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         match self.data::<Data>().results.get(raffle_id) {
             Some(_) => Err(ExistingResults),
             None => {
-                // save the result
+                // save the results
                 self.data::<Data>().results.insert(raffle_id, &results);
-                // emmit the event
-                self.emit_results(raffle_id, results);
                 // update the status
                 self.data::<Data>().status = Status::WaitingWinners;
                 Ok(())
@@ -107,12 +104,38 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         }
     }
 
+    /// check if the saved results are the same as the ones given in parameter
+    fn ensure_same_results(
+        &mut self,
+        raffle_id: RaffleId,
+        numbers: &[Number],
+    ) -> Result<(), RaffleError> {
+        // get the correct results for the given raffle
+        let result = self
+            .data::<Data>()
+            .results
+            .get(raffle_id)
+            .ok_or(DifferentResults)?;
+
+        if result.len() != numbers.len() {
+            return Err(DifferentResults);
+        }
+
+        for i in 0..numbers.len() {
+            if numbers[i] != result[i] {
+                return Err(DifferentResults);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// save the winners for the current raffle.
     fn set_winners(
         &mut self,
         raffle_id: RaffleId,
         winners: Vec<AccountId>,
     ) -> Result<(), RaffleError> {
-
         // check the raffle number
         if self.data::<Data>().current_raffle_id != raffle_id {
             return Err(RaffleError::IncorrectRaffle);
@@ -128,8 +151,6 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
             None => {
                 // save the result
                 self.data::<Data>().winners.insert(raffle_id, &winners);
-                // emmit the event
-                self.emit_winners(raffle_id, winners);
                 // update the status
                 self.data::<Data>().status = Status::Closed;
                 Ok(())
@@ -137,31 +158,13 @@ pub trait Raffle: Internal + Storage<Data> + access_control::Internal {
         }
     }
 
-    fn inner_participate(&mut self, numbers: Vec<Number>) -> Result<(), RaffleError> {
-
+    /// check if the user can participate to the currnt raffle
+    fn can_participate(&mut self) -> Result<(), RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::Ongoing {
             return Err(RaffleError::IncorrectStatus);
         }
 
-        let participant = Self::env().caller();
-        let raffle_id = self.data::<Data>().current_raffle_id;
-
-        // save the participant with an event
-        self.emit_participation_registered(raffle_id, participant, numbers);
-
         Ok(())
     }
-}
-
-#[openbrush::trait_definition]
-pub trait Internal {
-    fn emit_participation_registered(
-        &self,
-        raffle_id: RaffleId,
-        participant: AccountId,
-        numbers: Vec<Number>,
-    );
-    fn emit_results(&self, raffle_id: RaffleId, result: Vec<Number>);
-    fn emit_winners(&self, raffle_id: RaffleId, winners: Vec<AccountId>);
 }

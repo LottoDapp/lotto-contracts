@@ -21,7 +21,6 @@ pub struct Config {
 
 #[openbrush::trait_definition]
 pub trait RaffleConfig: Storage<Data> + access_control::Internal {
-
     #[ink(message)]
     #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
     fn set_config(&mut self, config: Config) -> Result<(), RaffleError> {
@@ -44,13 +43,29 @@ pub trait RaffleConfig: Storage<Data> + access_control::Internal {
     }
 
     /// return the config and throw an error of the config is missing
-    fn ensure_config(&mut self) -> Result<Config, RaffleError> {
+    fn ensure_config(&self) -> Result<Config, RaffleError> {
         match self.data::<Data>().config {
             None => Err(ConfigNotSet),
             Some(config) => Ok(config),
         }
     }
 
+    /// check if the config is the same as the one given in parameter
+    fn ensure_same_config(&self, config: &Config) -> Result<(), RaffleError> {
+        // get the correct results for the given raffle
+        let this_config = self.ensure_config()?;
+
+        if this_config.nb_numbers != config.nb_numbers
+            || this_config.min_number != config.min_number
+            || this_config.max_number != config.max_number
+        {
+            return Err(DifferentConfig);
+        }
+
+        Ok(())
+    }
+
+    /// check if the numbers respect the config
     fn check_numbers(&mut self, numbers: &[Number]) -> Result<(), RaffleError> {
         // check if the config is set
         let config = self.ensure_config()?;

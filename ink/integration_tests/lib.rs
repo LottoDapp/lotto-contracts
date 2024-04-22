@@ -80,7 +80,7 @@ mod e2e_tests {
         contract_id: &AccountId,
     ) -> RaffleId {
         let start_raffle = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|contract| contract.start_new_raffle());
+            .call(|contract| contract.start_raffle());
         client
             .call(&ink_e2e::alice(), start_raffle, 0, None)
             .await
@@ -140,11 +140,12 @@ mod e2e_tests {
         client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
         contract_id: &AccountId,
         raffle_id: RaffleId,
+        numbers: Vec<Number>,
         winners: Vec<AccountId>,
     ) {
         let request = LottoRequestMessage {
             raffle_id,
-            request: Request::CheckWinners(vec![]),
+            request: Request::CheckWinners(numbers.clone()),
         };
 
         let payload = LottoResponseMessage {
@@ -334,7 +335,8 @@ mod e2e_tests {
         );
 
         // send the results
-        bob_sends_results(&mut client, &contract_id, raffle_id, vec![5, 40, 8, 2]).await;
+        let results :Vec<Number> = vec![5, 40, 8, 2];
+        bob_sends_results(&mut client, &contract_id, raffle_id, results.clone()).await;
         assert_eq!(
             Status::WaitingWinners,
             get_current_status(&mut client, &contract_id).await
@@ -342,7 +344,7 @@ mod e2e_tests {
 
         // send the winners
         let dave_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
-        bob_sends_winners(&mut client, &contract_id, raffle_id, vec![dave_address]).await;
+        bob_sends_winners(&mut client, &contract_id, raffle_id, results, vec![dave_address]).await;
         assert_eq!(
             Status::Closed,
             get_current_status(&mut client, &contract_id).await
@@ -373,14 +375,15 @@ mod e2e_tests {
         );
 
         // send the results
-        bob_sends_results(&mut client, &contract_id, raffle_id, vec![8, 10, 4, 1]).await;
+        let results :Vec<Number> = vec![8, 10, 4, 1];
+        bob_sends_results(&mut client, &contract_id, raffle_id, results.clone()).await;
         assert_eq!(
             Status::WaitingWinners,
             get_current_status(&mut client, &contract_id).await
         );
 
         // send the winners => no winners
-        bob_sends_winners(&mut client, &contract_id, raffle_id, vec![]).await;
+        bob_sends_winners(&mut client, &contract_id, raffle_id, results, vec![]).await;
         assert_eq!(
             Status::Closed,
             get_current_status(&mut client, &contract_id).await
@@ -415,7 +418,8 @@ mod e2e_tests {
         alice_stops_raffle(&mut client, &contract_id).await;
 
         // send the results
-        bob_sends_results(&mut client, &contract_id, raffle_id, vec![8, 10, 4, 2]).await;
+        let results :Vec<Number> = vec![8, 10, 4, 2];
+        bob_sends_results(&mut client, &contract_id, raffle_id, results.clone()).await;
 
         // send the winners => two winners
         let charlie_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
@@ -423,6 +427,7 @@ mod e2e_tests {
             &mut client,
             &contract_id,
             raffle_id,
+            results,
             vec![dave_address, charlie_address],
         )
         .await;
