@@ -9,7 +9,7 @@ mod lotto_draw {
     use ink::prelude::{format, string::String};
     use phat_offchain_rollup::clients::ink::{Action, ContractId, InkRollupClient};
     use pink_extension::chain_extension::signing;
-    use pink_extension::{error, http_post, info, vrf, ResultExt};
+    use pink_extension::{error, http_post, debug, info, vrf, ResultExt};
     use scale::{Decode, Encode};
     use serde::Deserialize;
     use serde_json_core;
@@ -321,10 +321,7 @@ mod lotto_draw {
 
         /// Simulate the request (admin only - for dev purpose)
         #[ink(message)]
-        pub fn simulate_handle_request(
-            &self,
-            request: LottoRequestMessage
-        ) -> Result<Vec<u8>> {
+        pub fn simulate_handle_request(&self, request: LottoRequestMessage) -> Result<Vec<u8>> {
             self.ensure_owner()?;
             let response = self.handle_request(request)?;
             Ok(response.encode())
@@ -376,6 +373,8 @@ mod lotto_draw {
                 }
                 i += 1;
             }
+
+            info!("Numbers: {numbers:?}");
 
             Ok(numbers)
         }
@@ -446,7 +445,8 @@ mod lotto_draw {
                 r#"{{"query" : "{{participations({}){{ nodes {{ accountId }} }} }}"}}"#,
                 filter
             );
-            ink::env::debug_println!("body: {}", body);
+
+            debug!("body: {body}");
 
             // query the indexer
             let resp = http_post!(indexer_endpoint, body, headers);
@@ -473,6 +473,8 @@ mod lotto_draw {
                     .or(Err(ContractError::InvalidKeyLength))?;
                 winners.push(AccountId::from(address_hex));
             }
+
+            info!("Winners: {winners:02x?}");
 
             Ok(winners)
         }
