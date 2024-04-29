@@ -1,42 +1,29 @@
-# Lucky Ink! Smart Contracts
+# Ink! Smart Contract
 
-## Smart contract `dapps_staking_developer`
+This smart contract manages the states of the lottery.
 
-This smart contract is registered as developer in the `dAppStaking` pallet and receives the rewards from dAppStaking.
-The `raffle_consumer` contract is whitelisted to be able to withdraw these rewards and then transfer them into the `reward_manager` contract.
+When the smart contract is instantiated, the state is `NotStarted` and the `lotto manager` can configure the lottery.
+Based on the configuration, the players will choose 1, 2, 3, n numbers between `min_number` and `max_number`.
 
-### Build the contract
+Then, the `lotto manager` starts the lottery with the `start_raffle` function.
 
-```bash
-cd contracts/dapps_staking_developer
-cargo contract build
-```
+When the lottery is started, the participants interact with this contract to register chosen numbers via the `participate` method.
 
-## Smart contract `reward_manager`
+Later, the `lotto manager` completes the lottery with the `complete_raffle` method.
+During this operation, a `DrawNumbers` request is sent to the messsage queue. This message is waiting to be proceed by the phat contract.
+We use the `phat-offchain-rollup` sdk to manage the communication between ink! smart contract and phat contract: https://github.com/Phala-Network/phat-offchain-rollup/
 
-This smart contract manages the rewards that the lucky addresses can claim.
-Only the `raffle_consumer` contract is granted to provide the list of winners. 
+Afterward, the phat contract sends the winning numbers and the smart contract saves them on the blockchain.
+A new `CheckNumber` request is sent to the message queue. This message is waiting to be proceed by the phat contract.
 
-### Build the contract
+Next, the phat contract sends the winners (or an empty list if there is no winner) and the smart contract save them on the blockchain.
+A new lottery can start. Each lottery is identified by an identifier: `raffle_id`.
 
-```bash
-cd contracts/reward_manager
-cargo contract build
-```
-
-## Smart contract `raffle_consumer`
-
-This smart contract :
- - consumes the output coming from the `raffle` phat contract that manages the raffle,
- - transfers funds from `dapps_staking_developer` contract to `reward_manager` contract,
- - provide the lucky address(es) to `reward_manager` contract.
-
-Only the `raffle` phat contract is granted to provide the output of the raffle.
 
 ### Build the contract
 
 ```bash
-cd contracts/raffle_consumer
+cd contracts/lotto
 cargo contract build
 ```
 

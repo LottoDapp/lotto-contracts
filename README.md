@@ -1,35 +1,44 @@
-# Lucky Raffle
+# Lotto
 
-Lucky is a dApp built on top of dApp Staking. 
-The dApp organizes a raffle per era to redistribute a share of the developer rewards to one or more lucky guys among stakers. 
-It's a no-loss lottery!
+Lotto is a lottery in which participants choose numbers and if their numbers match with the winnings numbers, they win the jackpot.
 
-## The raffle
-The smart contract organizes a raffle among the addresses who staked on the dApp and distributes a share of the developer rewards to one lucky address.
+Data like "Numbers choose by the participants", "winning numbers" and "the winners" are registered in the blockchain by the Ink! smart contract. 
 
-It means that the user who stakes to the dApp Lucky will still receive the rewards from the dApp Staking in Astar, and moreover he will have a chance to win extra rewards with the raffles.
+A phat contract is on charge to randomly draw the numbers via a `verifable random function` and search the potential winners via a query on the indexer. 
 
-There is one raffle by era. The more you stake, the more chance you have to win a raffle.
+A lotto has different states:
+ - `NotStarted`: no lottery is started and no participant can choose numbers.
+ - `Ongoing`: the lottery is started and the participants can start to play,
+ - `WaitingResults`: the participants can not play anymore and we are waiting for the winning numbers.
+ - `WaitingWinners`: the winning numbers are saved on the blockchain and we are waiting for potential winner(s).
+ - `Closed`: the lottery is closed, the potential winners are saved on the blockchain. A new lottery can start.
 
-When you stake 100 tokens, it means you have 100 tickets for the raffle. Total tickets are the sum of all staked tokens on the dApp at each raffle.
+## Smart contract 
 
-So more tickets means more chance to win!
+`lotto_contract` is an Ink! smart contract deployed on Shibuya/Astar Network.
+This smart contract manages the states of the lottery.
 
-To try to give everyone a chance and prevent a whale from getting all the rewards, a same address cannot win consecutively. It must wait 10 eras to participate in the lottery again. The number of eras to wait is configurable and can be adapted if necessary.
+When the smart contract is instantiated, the state is `NotStarted` and the `lotto manager` can configure the lottery.
+Based on the configuration, the players will choose 1, 2, 3, n numbers between `min_number` and `max_number`.  
 
-## Smart contracts
+Then, the `lotto manager` starts the lottery with the `start_raffle` function.
 
-There are three ink! smart contracts deployed on Astar Network:
- - `dapp_staking_developer` : this contract receives the rewards from the `dAppStaking` pallet,
- - `reward_manager` : this contract contains the list of winners and the funds to be claimed. The users interact with this smart contract,
- - `raffle_consumer` : this smart contract consumes the output of the raffle managed by the `raffle` phat contract. This contract interacts with `dapp_staking_developer` contract to withdraw the required funds and with the `reward_manager` to provide the lucky addresses and the rewards. 
+When the lottery is started, the participants interact with this contract to register chosen numbers via the `participate` method.
 
-More information [here](ink/README.md).
+Later, the `lotto manager` completes the lottery with the `complete_raffle` method. 
+During this operation, a `DrawNumbers` request is sent to the messsage queue. This message is waiting to be proceed by the phat contract.
+We use the `phat-offchain-rollup` sdk to manage the communication between ink! smart contract and phat contract: https://github.com/Phala-Network/phat-offchain-rollup/ 
 
-## Phat contracts
+Afterward, the phat contract sends the winning numbers and the smart contract saves them on the blockchain.
+A new `CheckNumber` request is sent to the message queue. This message is waiting to be proceed by the phat contract.
 
-There are two phat contracts deployed on Phala Network:
-- `dapp_staking` : this phat contract calls the `dAppStaking` pallet to claim the dApp rewards,
-- `raffle` : this phat contract manages the raffle and sent the result to the `raffle_consumer` contract.
+Next, the phat contract sends the winners (or an empty list if there is no winner) and the smart contract save them on the blockchain.
+A new lottery can start. Each lottery is identified by an identifier: `raffle_id`.
 
-More information [here](phat/README.md).
+
+## Phat contract
+
+The phat contract is an offchain rollup in charge to proceed the messages sent by the ink! smart contract: 
+- when a `DrawNumbers` request is sent by the smart contract, the phat contract uses the `pink_extension::vrf` to randomly provide the winning numbers.
+- when a `CheckWinners` request is sent by the smart contract, the phat contract reads the SubQuery indexer to check the winners and send them to ink! smart contract.
+You can find more information about the communication between ink! smart contract and phat contract [here](https://github.com/Phala-Network/phat-offchain-rollup/).

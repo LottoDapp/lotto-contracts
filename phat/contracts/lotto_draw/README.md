@@ -1,9 +1,14 @@
-# VrfOracle
+# Phat Contract
 
-The Phat Contract `VrfOracle`, deployed on Phala Network (or testnet):
-1) Listens the requests from the Smart Contract, deployed on Astar Network (or testnet)
-2) Generates a random value between min and max values
-3) Sends the value to the Smart Contract, deployed on Astar Network (or testnet)
+The phat contract is an offchain rollup in charge to proceed the messages sent by the ink! smart contract:
+- when a `DrawNumbers` request is sent by the smart contract, the phat contract uses the `pink_extension::vrf` to randomly provide the winning numbers.
+- when a `CheckWinners` request is sent by the smart contract, the phat contract reads the SubQuery indexer to check the winners and send them to ink! smart contract.
+  You can find more information about the communication between ink! smart contract and phat contract [here](https://github.com/Phala-Network/phat-offchain-rollup/).
+
+The Phat Contract `LottoDrow`, deployed on Phala Network (or testnet):
+1) Listens the requests from the Smart Contract deployed on Astar Network (or testnet)
+2) If a `DrawNumbers` request is sent, the phat contract uses the `pink_extension::vrf` to randomly provide the winning numbers. If a `CheckWinners` request is sent, the phat contract reads the SubQuery indexer to check the winners.
+3) Sends the response to the Smart Contract, deployed on Astar Network (or testnet)
 
 
 ## Build
@@ -16,6 +21,9 @@ cargo contract build
 
 ## Run Unit tests
 
+Before you can run the tests, you need to configure the phat contract.
+Copy `.env_local` or `.env_shibuya` as `.env` if you haven't done it before.
+
 To run the unit test:
 
 ```bash
@@ -24,19 +32,19 @@ cargo test
 
 ## Run Integration tests
 
-### Deploy the ink! smart contract `vrf_consumer`
+### Deploy the ink! smart contract `lotto_contract`
 
 Before you can run the tests, you need to have an ink! smart contract deployed in a Substrate node with pallet-contracts.
 
 #### Use the default Ink! smart contract
 
-You can use the default smart contract deployed on Shibuya (`WJFx4kaW59yMD4rpQQbWnUErKr35fo4aEEM7HuukkJkbq7a`).
+You can use the default smart contract deployed on Shibuya (`aB9AxBVmoYogZ5ZAX662R5YJafTVCqVbtGzJYX3LvvwZW5r`).
 
 #### Or deploy your own ink! smart contract
 
 You can build the smart contract
 ```bash
-cd ../../ink/contracts/vrf_consumer
+cd ../../ink/contracts/lotto
 cargo contract build
 ```
 And use Contracts-UI or Polkadot.js to deploy your contract and interact with it.
@@ -44,8 +52,7 @@ You will have to configure `alice` or another address as attestor.
 
 ### Push some requests
 
-Use Contracts-UI or Polkadot.js to interact with your smart contract deployed on local node or Shibuya and request a random number.
-
+Use Contracts-UI or Polkadot.js to interact with your smart contract deployed on local node or Shibuya.
 
 ### Run the integration tests
 
