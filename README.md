@@ -1,12 +1,12 @@
 # Lotto
 
-Lotto is a lottery in which participants choose numbers and if their numbers match with the winnings numbers, they win the jackpot.
+Lotto is a lottery in which participants choose numbers and if their numbers match with the winning numbers, they win the jackpot.
 
-Data like "Numbers choose by the participants", "winning numbers" and "the winners" are registered in the blockchain by the Ink! smart contract. 
+Data such as "Numbers choose by the participants", "winning numbers" and "the winners" are registered in the blockchain by the Ink! smart contract. 
 
-A phat contract is on charge to randomly draw the numbers via a `verifable random function` and search the potential winners via a query on the indexer. 
+A phat contract is on charge to randomly draw the numbers via a `verifiable random function` and search the potential winners via a query on the indexer. 
 
-A lotto has different states:
+A lottery has different states:
  - `NotStarted`: no lottery is started and no participant can choose numbers.
  - `Ongoing`: the lottery is started and the participants can start to play,
  - `WaitingResults`: the participants can not play anymore and we are waiting for the winning numbers.
