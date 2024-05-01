@@ -11,7 +11,10 @@ pub struct Data {
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout))]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+)]
 pub struct Config {
     pub nb_numbers: u8,
     pub min_number: Number,

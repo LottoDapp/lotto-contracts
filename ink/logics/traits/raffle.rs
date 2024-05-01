@@ -15,7 +15,10 @@ pub struct Data {
 }
 
 #[derive(Default, Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout))]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+)]
 pub enum Status {
     #[default]
     NotStarted,
@@ -27,7 +30,6 @@ pub enum Status {
 
 #[openbrush::trait_definition]
 pub trait Raffle: Storage<Data> {
-
     /// Start a new raffle
     fn start_new_raffle(&mut self) -> Result<RaffleId, RaffleError> {
         // check the status

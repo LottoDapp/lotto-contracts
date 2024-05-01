@@ -210,7 +210,10 @@ pub mod lotto_contract {
         }
 
         #[ink(message)]
-        pub fn participate_batch(&mut self, numbers: Vec<Vec<Number>>) -> Result<(), ContractError> {
+        pub fn participate_batch(
+            &mut self,
+            numbers: Vec<Vec<Number>>,
+        ) -> Result<(), ContractError> {
             // check if the numbers are correct
             for n in numbers {
                 self.participate(n)?;

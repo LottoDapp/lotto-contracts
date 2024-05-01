@@ -9,7 +9,7 @@ mod lotto_draw {
     use ink::prelude::{format, string::String};
     use phat_offchain_rollup::clients::ink::{Action, ContractId, InkRollupClient};
     use pink_extension::chain_extension::signing;
-    use pink_extension::{error, http_post, debug, info, vrf, ResultExt};
+    use pink_extension::{debug, error, http_post, info, vrf, ResultExt};
     use scale::{Decode, Encode};
     use serde::Deserialize;
     use serde_json_core;
