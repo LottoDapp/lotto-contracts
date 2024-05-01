@@ -13,6 +13,10 @@ A lottery has different states:
  - `WaitingWinners`: the winning numbers are saved on the blockchain and we are waiting for potential winner(s).
  - `Closed`: the lottery is closed, the potential winners are saved on the blockchain. A new lottery can start.
 
+## Prerequisites
+
+Rust 1.76 and cargo-contract 3.2 must be installed to compile the smart and phat contract.s
+
 ## Smart contract 
 
 `lotto_contract` is an Ink! smart contract deployed on Shibuya/Astar Network.
