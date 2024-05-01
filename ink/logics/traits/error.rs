@@ -14,6 +14,11 @@ pub enum RaffleError {
     DifferentResults,
     ExistingResults,
     ExistingWinners,
+    TransferError,
+    AddOverFlow,
+    SubOverFlow,
+    DivByZero,
+    NoReward,
 }
 
 /// convertor from AccessControlError to RaffleError

@@ -6,7 +6,8 @@ pub mod lotto_contract {
     use ink::codegen::{EmitEvent, Env};
     use ink::prelude::vec::Vec;
     use lotto::traits::{
-        config, config::*, error::*, raffle, raffle::*, Number, RaffleId, LOTTO_MANAGER_ROLE,
+        config, config::*, error::*, raffle, raffle::*, reward, reward::*, Number, RaffleId,
+        LOTTO_MANAGER_ROLE,
     };
     use openbrush::contracts::access_control::*;
     use openbrush::contracts::ownable::*;
@@ -55,6 +56,22 @@ pub mod lotto_contract {
         winners: Vec<AccountId>,
     }
 
+    /// Event emitted when a reward is pending
+    #[ink(event)]
+    pub struct PendingReward {
+        #[ink(topic)]
+        account: AccountId,
+        amount: Balance,
+    }
+
+    /// Event emitted when a user claim rewards
+    #[ink(event)]
+    pub struct RewardsClaimed {
+        #[ink(topic)]
+        account: AccountId,
+        amount: Balance,
+    }
+
     /// Errors occurred in the contract
     #[derive(Debug, Eq, PartialEq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -62,6 +79,7 @@ pub mod lotto_contract {
         AccessControlError(AccessControlError),
         RaffleError(RaffleError),
         RollupAnchorError(RollupAnchorError),
+        TransferError,
     }
 
     /// convertor from AccessControlError to ContractError
@@ -169,10 +187,13 @@ pub mod lotto_contract {
         config: config::Data,
         #[storage_field]
         lotto: raffle::Data,
+        #[storage_field]
+        reward: reward::Data,
     }
 
     impl RaffleConfig for Contract {}
     impl Raffle for Contract {}
+    impl RewardManager for Contract {}
 
     impl RollupAnchor for Contract {}
     impl MetaTransaction for Contract {}
@@ -299,8 +320,13 @@ pub mod lotto_contract {
             // check if the winners were selected based on the correct numbers
             Raffle::ensure_same_results(self, raffle_id, &numbers)?;
 
-            // set the winners
+            // set the winners in the raffle
             Raffle::set_winners(self, raffle_id, winners.clone())?;
+
+            // set the winners in the reward manager
+            if !winners.is_empty() {
+                RewardManager::add_winners(self, winners.clone())?;
+            }
 
             // emmit the event
             self.env()
@@ -332,6 +358,16 @@ pub mod lotto_contract {
         #[modifiers(only_role(DEFAULT_ADMIN_ROLE))]
         pub fn terminate_me(&mut self) -> Result<(), ContractError> {
             self.env().terminate_contract(self.env().caller());
+        }
+
+        #[ink(message)]
+        #[openbrush::modifiers(only_role(DEFAULT_ADMIN_ROLE))]
+        pub fn withdraw(&mut self, value: Balance) -> Result<(), ContractError> {
+            let caller = Self::env().caller();
+            self.env()
+                .transfer(caller, value)
+                .map_err(|_| ContractError::TransferError)?;
+            Ok(())
         }
     }
 
@@ -397,6 +433,16 @@ pub mod lotto_contract {
     impl meta_transaction::EventBroadcaster for Contract {
         fn emit_event_meta_tx_decoded(&self) {
             // do nothing
+        }
+    }
+
+    impl reward::Internal for Contract {
+        fn emit_pending_reward_event(&self, account: AccountId, amount: Balance) {
+            self.env().emit_event(PendingReward { account, amount });
+        }
+
+        fn emit_rewards_claimed_event(&self, account: AccountId, amount: Balance) {
+            self.env().emit_event(RewardsClaimed { account, amount });
         }
     }
 }
