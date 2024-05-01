@@ -210,6 +210,16 @@ pub mod lotto_contract {
         }
 
         #[ink(message)]
+        pub fn participate_batch(&mut self, numbers: Vec<Vec<Number>>) -> Result<(), ContractError> {
+            // check if the numbers are correct
+            for n in numbers {
+                self.participate(n)?;
+            }
+
+            Ok(())
+        }
+
+        #[ink(message)]
         #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
         pub fn start_raffle(&mut self) -> Result<RaffleId, ContractError> {
             // start new raffle
