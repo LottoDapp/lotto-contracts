@@ -2,7 +2,6 @@ use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
 use crate::traits::{Number, RaffleId};
 use ink::prelude::vec::Vec;
-use ink::storage::traits::StorageLayout;
 use ink::storage::Mapping;
 use openbrush::traits::{AccountId, Storage};
 
@@ -16,7 +15,7 @@ pub struct Data {
 }
 
 #[derive(Default, Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout))]
 pub enum Status {
     #[default]
     NotStarted,

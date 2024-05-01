@@ -1,7 +1,6 @@
 use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
 use crate::traits::{Number, LOTTO_MANAGER_ROLE};
-use ink::storage::traits::StorageLayout;
 use openbrush::contracts::access_control::access_control;
 use openbrush::traits::Storage;
 
@@ -12,7 +11,7 @@ pub struct Data {
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout))]
 pub struct Config {
     pub nb_numbers: u8,
     pub min_number: Number,
