@@ -13,6 +13,12 @@ pub struct Data {
 
 #[openbrush::trait_definition]
 pub trait RewardManager: Internal + Storage<Data> {
+
+    #[ink(message, payable)]
+    fn fund(&mut self) -> Result<(), RaffleError> {
+        Ok(())
+    }
+
     fn add_winners(&mut self, accounts: Vec<AccountId>) -> Result<(), RaffleError> {
         let mut total_pending_rewards = self.data::<Data>().total_pending_rewards;
 
@@ -48,6 +54,12 @@ pub trait RewardManager: Internal + Storage<Data> {
         Ok(())
     }
 
+    /// return the total pending reward
+    #[ink(message)]
+    fn get_total_pending_rewards(&mut self) -> Balance {
+        self.data::<Data>().total_pending_rewards
+    }
+
     /// return true if the current account has pending rewards
     #[ink(message)]
     fn has_pending_rewards(&self) -> bool {
@@ -70,8 +82,8 @@ pub trait RewardManager: Internal + Storage<Data> {
     fn get_pending_rewards_from(
         &mut self,
         from: AccountId,
-    ) -> Result<Option<Balance>, RaffleError> {
-        Ok(self.data::<Data>().pending_rewards.get(&from))
+    ) -> Option<Balance> {
+        self.data::<Data>().pending_rewards.get(&from)
     }
 
     /// claim all pending rewards for the current account

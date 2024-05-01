@@ -7,11 +7,13 @@ mod e2e_tests {
     use ink_e2e::{build_message, PolkadotConfig};
     use openbrush::contracts::access_control::accesscontrol_external::AccessControl;
     use openbrush::traits::AccountId;
+    use openbrush::traits::Balance;
     use scale::Encode;
 
     use lotto::traits::config::raffleconfig_external::RaffleConfig;
     use lotto::traits::config::Config;
     use lotto::traits::raffle::raffle_external::Raffle;
+    use lotto::traits::reward::rewardmanager_external::RewardManager;
     use lotto::traits::Number;
     use lotto::traits::RaffleId;
 
@@ -68,7 +70,7 @@ mod e2e_tests {
         // bob is granted as attestor
         let bob_address = ink::primitives::AccountId::from(ink_e2e::bob().public_key().0);
         let grant_role = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.grant_role(ATTESTOR_ROLE, Some(bob_address)));
+            .call(|contract| contract.grant_role(ATTESTOR_ROLE, Some(bob_address)));
         client
             .call(&ink_e2e::alice(), grant_role, 0, None)
             .await
@@ -119,7 +121,7 @@ mod e2e_tests {
 
         let actions = vec![HandleActionInput::Reply(payload.encode())];
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
+            .call(|contract| contract.rollup_cond_eq(vec![], vec![], actions.clone()));
 
         /*
                let result = client
@@ -155,7 +157,7 @@ mod e2e_tests {
 
         let actions = vec![HandleActionInput::Reply(payload.encode())];
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
+            .call(|contract| contract.rollup_cond_eq(vec![], vec![], actions.clone()));
 
         /*
                let result = client
@@ -192,7 +194,7 @@ mod e2e_tests {
     ) -> RaffleId {
         let get_current_raffle_id =
             build_message::<lotto_contract::ContractRef>(contract_id.clone())
-                .call(|oracle| oracle.get_current_raffle_id());
+                .call(|contract| contract.get_current_raffle_id());
 
         let result = client
             .call_dry_run(&ink_e2e::alice(), &get_current_raffle_id, 0, None)
@@ -206,7 +208,7 @@ mod e2e_tests {
         contract_id: &AccountId,
     ) -> Status {
         let get_current_status = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.get_current_status());
+            .call(|contract| contract.get_current_status());
 
         let result = client
             .call_dry_run(&ink_e2e::alice(), &get_current_status, 0, None)
@@ -221,7 +223,7 @@ mod e2e_tests {
         raffle_id: RaffleId,
     ) -> Option<Vec<Number>> {
         let get_results = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.get_results(raffle_id));
+            .call(|contract| contract.get_results(raffle_id));
 
         let result = client
             .call_dry_run(&ink_e2e::alice(), &get_results, 0, None)
@@ -236,13 +238,122 @@ mod e2e_tests {
         raffle_id: RaffleId,
     ) -> Option<Vec<AccountId>> {
         let get_winners = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.get_winners(raffle_id));
+            .call(|contract| contract.get_winners(raffle_id));
 
         let result = client
             .call_dry_run(&ink_e2e::alice(), &get_winners, 0, None)
             .await;
 
         result.return_value()
+    }
+
+    async fn get_pending_rewards_from(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+        account_id: &AccountId,
+    ) -> Option<Balance> {
+        let get_pending_rewards_from =
+            build_message::<lotto_contract::ContractRef>(contract_id.clone())
+                .call(|contract| contract.get_pending_rewards_from(*account_id));
+
+        let result = client
+            .call_dry_run(&ink_e2e::alice(), &get_pending_rewards_from, 0, None)
+            .await;
+
+        result.return_value()
+    }
+
+    async fn get_total_pending_rewards(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+    ) -> Balance {
+        let get_total_pending_rewards =
+            build_message::<lotto_contract::ContractRef>(contract_id.clone())
+                .call(|contract| contract.get_total_pending_rewards());
+
+        let result = client
+            .call_dry_run(&ink_e2e::alice(), &get_total_pending_rewards, 0, None)
+            .await;
+
+        result.return_value()
+    }
+
+    async fn fund(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+        value: Balance,
+    ) {
+        // check the balance of the contract
+        let contract_balance_before = client
+            .balance(*contract_id)
+            .await
+            .expect("getting contract balance failed");
+
+        // fund the contract
+        let fund_contract = build_message::<lotto_contract::ContractRef>(contract_id.clone())
+            .call(|contract| contract.fund());
+        client
+            .call(&ink_e2e::alice(), fund_contract, value, None)
+            .await
+            .expect("fund contract failed");
+
+        // check the balance of the contract
+        let contract_balance_after = client
+            .balance(*contract_id)
+            .await
+            .expect("getting contract balance failed");
+
+        assert_eq!(contract_balance_before + value, contract_balance_after);
+    }
+
+    async fn check_and_claim_rewards(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+        signer: &ink_e2e::Keypair,
+        value: Balance,
+    ) {
+        let address = ink::primitives::AccountId::from(signer.public_key().0);
+
+        // check the balance before claiming
+        let balance_before = client
+            .balance(address)
+            .await
+            .expect("getting balance failed");
+
+        // check the pending rewards
+        assert_eq!(
+            Some(value),
+            get_pending_rewards_from(client, &contract_id, &address).await
+        );
+
+        // claim the rewards
+        let claim_rewards = build_message::<lotto_contract::ContractRef>(contract_id.clone())
+            .call(|contract| contract.claim());
+
+        /*
+                let result = client
+                    .call_dry_run(signer, &claim_rewards, 0, None)
+                    .await;
+                assert_eq!(result.debug_message(), "e");
+        */
+        client
+            .call(signer, claim_rewards, 0, None)
+            .await
+            .expect("claim rewards failed");
+        // check the balance after claiming
+        let balance_after = client
+            .balance(address)
+            .await
+            .expect("getting balance failed");
+
+        // we need to deduce teh fees
+        //assert_eq!(balance_before + value, balance_after);
+        assert!(balance_after > balance_before);
+
+        assert_eq!(
+            None,
+            get_pending_rewards_from(client, &contract_id, &address).await
+        );
     }
 
     #[ink_e2e::test(additional_contracts = "contracts/lotto/Cargo.toml")]
@@ -255,6 +366,9 @@ mod e2e_tests {
 
         // bob is granted as attestor
         alice_grants_bob_as_attestor(&mut client, &contract_id).await;
+
+        // fund the contract to have rewards
+        fund(&mut client, &contract_id, 100).await;
 
         // start the raffle
         let mut raffle_id = alice_starts_raffle(&mut client, &contract_id).await;
@@ -281,6 +395,7 @@ mod e2e_tests {
             vec![5, 40, 8, 2],
         )
         .await;
+
         participates(
             &mut client,
             &contract_id,
@@ -288,6 +403,7 @@ mod e2e_tests {
             vec![3, 6, 7, 5],
         )
         .await;
+
         participates(
             &mut client,
             &contract_id,
@@ -312,6 +428,7 @@ mod e2e_tests {
             vec![50, 3, 8, 2],
         )
         .await;
+
         participates(
             &mut client,
             &contract_id,
@@ -319,6 +436,7 @@ mod e2e_tests {
             vec![34, 6, 2, 5],
         )
         .await;
+
         participates(
             &mut client,
             &contract_id,
@@ -342,7 +460,7 @@ mod e2e_tests {
             get_current_status(&mut client, &contract_id).await
         );
 
-        // send the winners
+        // send the winners (dave wins 100)
         let dave_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
         bob_sends_winners(
             &mut client,
@@ -356,6 +474,21 @@ mod e2e_tests {
             Status::Closed,
             get_current_status(&mut client, &contract_id).await
         );
+
+        // check the total pending rewards
+        assert_eq!(
+            100,
+            get_total_pending_rewards(&mut client, &contract_id).await
+        );
+
+        // check if Dave has rewards
+        assert_eq!(
+            Some(100),
+            get_pending_rewards_from(&mut client, &contract_id, &dave_address).await
+        );
+
+        // fund again the contract before starting the raffle
+        fund(&mut client, &contract_id, 100).await;
 
         // start the raffle 2
         raffle_id = alice_starts_raffle(&mut client, &contract_id).await;
@@ -396,6 +529,9 @@ mod e2e_tests {
             get_current_status(&mut client, &contract_id).await
         );
 
+        // fund again the contract before starting the raffle
+        fund(&mut client, &contract_id, 100).await;
+
         // start the raffle 3
         raffle_id = alice_starts_raffle(&mut client, &contract_id).await;
         assert_eq!(3, raffle_id);
@@ -428,8 +564,8 @@ mod e2e_tests {
         let results: Vec<Number> = vec![8, 10, 4, 2];
         bob_sends_results(&mut client, &contract_id, raffle_id, results.clone()).await;
 
-        // send the winners => two winners
-        let charlie_address = ink::primitives::AccountId::from(ink_e2e::dave().public_key().0);
+        // send the winners => two winners (50 each)
+        let charlie_address = ink::primitives::AccountId::from(ink_e2e::charlie().public_key().0);
         bob_sends_winners(
             &mut client,
             &contract_id,
@@ -439,7 +575,7 @@ mod e2e_tests {
         )
         .await;
 
-        //check the results
+        //check the results and winners for raffle 1
         assert_eq!(
             Some(vec![5, 40, 8, 2]),
             get_results(&mut client, &contract_id, 1).await
@@ -449,6 +585,7 @@ mod e2e_tests {
             get_winners(&mut client, &contract_id, 1).await
         );
 
+        //check the results and winners for raffle 2
         assert_eq!(
             Some(vec![8, 10, 4, 1]),
             get_results(&mut client, &contract_id, 2).await
@@ -458,6 +595,7 @@ mod e2e_tests {
             get_winners(&mut client, &contract_id, 2).await
         );
 
+        //check the results and winners for raffle 3
         assert_eq!(
             Some(vec![8, 10, 4, 2]),
             get_results(&mut client, &contract_id, 3).await
@@ -465,6 +603,29 @@ mod e2e_tests {
         assert_eq!(
             Some(vec![dave_address, charlie_address]),
             get_winners(&mut client, &contract_id, 3).await
+        );
+
+        //check the total pending rewards
+        assert_eq!(
+            300,
+            get_total_pending_rewards(&mut client, &contract_id).await
+        );
+
+        // check and claim the rewards
+        check_and_claim_rewards(&mut client, &contract_id, &ink_e2e::dave(), 200).await;
+        check_and_claim_rewards(&mut client, &contract_id, &ink_e2e::charlie(), 100).await;
+
+        // check bob has no reward
+        let bob_address = ink::primitives::AccountId::from(ink_e2e::bob().public_key().0);
+        assert_eq!(
+            None,
+            get_pending_rewards_from(&mut client, &contract_id, &bob_address).await
+        );
+
+        //check there is no pending reward
+        assert_eq!(
+            0,
+            get_total_pending_rewards(&mut client, &contract_id).await
         );
 
         Ok(())
@@ -477,7 +638,7 @@ mod e2e_tests {
 
         // bob is not granted as attestor => it should not be able to send a message
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], vec![]));
+            .call(|contract| contract.rollup_cond_eq(vec![], vec![], vec![]));
         let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
         assert!(
             result.is_err(),
@@ -489,7 +650,7 @@ mod e2e_tests {
 
         // then bob is able to send a message
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], vec![]));
+            .call(|contract| contract.rollup_cond_eq(vec![], vec![], vec![]));
         let result = client
             .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
             .await
@@ -510,7 +671,7 @@ mod e2e_tests {
 
         let actions = vec![HandleActionInput::Reply(58u128.encode())];
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.rollup_cond_eq(vec![], vec![], actions.clone()));
+            .call(|contract| contract.rollup_cond_eq(vec![], vec![], actions.clone()));
         let result = client.call(&ink_e2e::bob(), rollup_cond_eq, 0, None).await;
         assert!(
             result.is_err(),
@@ -538,7 +699,7 @@ mod e2e_tests {
 
         // add the role => it should be succeed
         let grant_role = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.grant_role(ATTESTOR_ROLE, Some(from)));
+            .call(|contract| contract.grant_role(ATTESTOR_ROLE, Some(from)));
         client
             .call(&ink_e2e::alice(), grant_role, 0, None)
             .await
@@ -547,7 +708,7 @@ mod e2e_tests {
         // prepare the meta transaction
         let data = RollupCondEqMethodParams::encode(&(vec![], vec![], vec![]));
         let prepare_meta_tx = build_message::<lotto_contract::ContractRef>(contract_id.clone())
-            .call(|oracle| oracle.prepare(from, data.clone()));
+            .call(|contract| contract.prepare(from, data.clone()));
         let result = client
             .call(&ink_e2e::bob(), prepare_meta_tx, 0, None)
             .await
@@ -569,7 +730,7 @@ mod e2e_tests {
         // do the meta tx: charlie sends the message
         let meta_tx_rollup_cond_eq =
             build_message::<lotto_contract::ContractRef>(contract_id.clone())
-                .call(|oracle| oracle.meta_tx_rollup_cond_eq(request.clone(), signature));
+                .call(|contract| contract.meta_tx_rollup_cond_eq(request.clone(), signature));
         client
             .call(&ink_e2e::charlie(), meta_tx_rollup_cond_eq, 0, None)
             .await
@@ -578,7 +739,7 @@ mod e2e_tests {
         // do it again => it must failed
         let meta_tx_rollup_cond_eq =
             build_message::<lotto_contract::ContractRef>(contract_id.clone())
-                .call(|oracle| oracle.meta_tx_rollup_cond_eq(request.clone(), signature));
+                .call(|contract| contract.meta_tx_rollup_cond_eq(request.clone(), signature));
         let result = client
             .call(&ink_e2e::charlie(), meta_tx_rollup_cond_eq, 0, None)
             .await;
