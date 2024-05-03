@@ -15,7 +15,7 @@ A lottery has different states:
 
 ## Prerequisites
 
-Rust 1.76 and cargo-contract 3.2 must be installed to compile the smart and phat contract.s
+Rust 1.76 and cargo-contract 3.2 must be installed to compile the smart and phat contracts.
 
 ## Smart contract 
 
