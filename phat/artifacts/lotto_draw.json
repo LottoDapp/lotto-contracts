@@ -1,10 +1,10 @@
 {
   "source": {
-    "hash": "0x0ec06a0c49103527a34341f7d6217cc48f99ecfb8cc759dfb48fbbd0cfe0caf6",
+    "hash": "0x7034113d0af945c4dda714c7b34a206c45cba7027c0e73bf19425fe1d8a62e61",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
-      "build_mode": "Debug",
+      "build_mode": "Release",
       "cargo_contract_version": "3.2.0",
       "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
       "wasm_opt_settings": {
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "lotto_draw",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "authors": [
       "GuiGou"
     ]
