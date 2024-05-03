@@ -1,6 +1,6 @@
 [package]
 name = "e2e_tests"
-version = "1.0.1"
+version = "0.1.0"
 authors = ["guigou"]
 edition = "2021"
 
