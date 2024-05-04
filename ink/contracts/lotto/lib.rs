@@ -246,7 +246,6 @@ pub mod lotto_contract {
         #[ink(message)]
         #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
         pub fn set_config(&mut self, config: Config) -> Result<(), RaffleError> {
-
             // check the status, we can set the config only when the raffle is not started yet
             let status = Raffle::get_current_status(self);
             if status != Status::NotStarted {

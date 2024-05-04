@@ -1,7 +1,6 @@
 use crate::traits::error::RaffleError;
 use crate::traits::error::RaffleError::*;
-use crate::traits::{Number, LOTTO_MANAGER_ROLE};
-use openbrush::contracts::access_control::access_control;
+use crate::traits::Number;
 use openbrush::traits::Storage;
 
 #[derive(Default, Debug)]
@@ -22,9 +21,7 @@ pub struct Config {
 }
 
 #[openbrush::trait_definition]
-pub trait RaffleConfig: Storage<Data> + access_control::Internal {
-    #[ink(message)]
-    #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
+pub trait RaffleConfig: Storage<Data> {
     fn set_config(&mut self, config: Config) -> Result<(), RaffleError> {
         // check the config
         if config.nb_numbers == 0 {
