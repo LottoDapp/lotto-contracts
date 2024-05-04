@@ -246,6 +246,11 @@ pub mod lotto_contract {
         #[ink(message)]
         #[openbrush::modifiers(access_control::only_role(LOTTO_MANAGER_ROLE))]
         pub fn start_raffle(&mut self) -> Result<RaffleId, ContractError> {
+            let raffle_id = self.inner_start_raffle()?;
+            Ok(raffle_id)
+        }
+
+        fn inner_start_raffle(&mut self) -> Result<RaffleId, ContractError> {
             // start new raffle
             let raffle_id = Raffle::start_new_raffle(self)?;
 
@@ -323,14 +328,20 @@ pub mod lotto_contract {
             // set the winners in the raffle
             Raffle::set_winners(self, raffle_id, winners.clone())?;
 
+            // emmit the event
+            self.env().emit_event(WinnersRevealed {
+                raffle_id,
+                winners: winners.clone(),
+            });
+
             // set the winners in the reward manager
             if !winners.is_empty() {
-                RewardManager::add_winners(self, winners.clone())?;
+                RewardManager::add_winners(self, winners)?;
+            } else {
+                // start automatically the new raffle if there is no winner
+                self.inner_start_raffle()?;
             }
 
-            // emmit the event
-            self.env()
-                .emit_event(WinnersRevealed { raffle_id, winners });
             Ok(())
         }
 

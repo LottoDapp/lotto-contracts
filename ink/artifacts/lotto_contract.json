@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x402e7e405a9f83996882537282f128d2eccdb0a6cfadd50c85b417439914b4aa",
+    "hash": "0x831699a31447bcdf9062dec3c480e65df6e354d332f2274ff28f585af3773dc9",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "lotto_contract",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "authors": [
       "guigou"
     ]
@@ -68,7 +68,7 @@
         "displayName": [
           "Hash"
         ],
-        "type": 56
+        "type": 52
       },
       "maxEventTopics": 4,
       "timestamp": {
@@ -521,6 +521,22 @@
         "selector": "0x410fcc9d"
       },
       {
+        "args": [],
+        "default": false,
+        "docs": [],
+        "label": "RaffleConfig::get_config",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 24
+        },
+        "selector": "0x77c110bf"
+      },
+      {
         "args": [
           {
             "label": "config",
@@ -529,7 +545,7 @@
                 "raffleconfig_external",
                 "SetConfigInput1"
               ],
-              "type": 24
+              "type": 26
             }
           }
         ],
@@ -543,15 +559,26 @@
             "ink",
             "MessageResult"
           ],
-          "type": 25
+          "type": 27
         },
         "selector": "0x8c445a93"
       },
       {
-        "args": [],
+        "args": [
+          {
+            "label": "raffle_id",
+            "type": {
+              "displayName": [
+                "raffle_external",
+                "GetResultsInput1"
+              ],
+              "type": 3
+            }
+          }
+        ],
         "default": false,
         "docs": [],
-        "label": "RaffleConfig::get_config",
+        "label": "Raffle::get_results",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -559,9 +586,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 27
+          "type": 29
         },
-        "selector": "0x77c110bf"
+        "selector": "0x319b058b"
       },
       {
         "args": [],
@@ -575,7 +602,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 29
+          "type": 31
         },
         "selector": "0xeb732a97"
       },
@@ -618,136 +645,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 31
-        },
-        "selector": "0x8b69753f"
-      },
-      {
-        "args": [
-          {
-            "label": "raffle_id",
-            "type": {
-              "displayName": [
-                "raffle_external",
-                "GetResultsInput1"
-              ],
-              "type": 3
-            }
-          }
-        ],
-        "default": false,
-        "docs": [],
-        "label": "Raffle::get_results",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
           "type": 33
         },
-        "selector": "0x319b058b"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [],
-        "label": "RewardManager::fund",
-        "mutates": true,
-        "payable": true,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 25
-        },
-        "selector": "0x6e7f485c"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [
-          " claim all pending rewards for the current account",
-          " After claiming, there is not anymore pending rewards for this account"
-        ],
-        "label": "RewardManager::claim",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 25
-        },
-        "selector": "0x5f8b7ca2"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [
-          " return true if the current account has pending rewards"
-        ],
-        "label": "RewardManager::has_pending_rewards",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 35
-        },
-        "selector": "0x80598ed8"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [
-          " return the total pending reward"
-        ],
-        "label": "RewardManager::get_total_pending_rewards",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 37
-        },
-        "selector": "0xb9a36ad1"
-      },
-      {
-        "args": [
-          {
-            "label": "from",
-            "type": {
-              "displayName": [
-                "rewardmanager_external",
-                "HasPendingRewardsFromInput1"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " return true if the given account has pending rewards"
-        ],
-        "label": "RewardManager::has_pending_rewards_from",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 35
-        },
-        "selector": "0x41c593ae"
+        "selector": "0x8b69753f"
       },
       {
         "args": [
@@ -774,7 +674,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 38
+          "type": 35
         },
         "selector": "0x6af8ea62"
       },
@@ -804,9 +704,109 @@
             "ink",
             "MessageResult"
           ],
-          "type": 25
+          "type": 27
         },
         "selector": "0xa7118ada"
+      },
+      {
+        "args": [
+          {
+            "label": "from",
+            "type": {
+              "displayName": [
+                "rewardmanager_external",
+                "HasPendingRewardsFromInput1"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " return true if the given account has pending rewards"
+        ],
+        "label": "RewardManager::has_pending_rewards_from",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 37
+        },
+        "selector": "0x41c593ae"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " return the total pending reward"
+        ],
+        "label": "RewardManager::get_total_pending_rewards",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 39
+        },
+        "selector": "0xb9a36ad1"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " return true if the current account has pending rewards"
+        ],
+        "label": "RewardManager::has_pending_rewards",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 37
+        },
+        "selector": "0x80598ed8"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [],
+        "label": "RewardManager::fund",
+        "mutates": true,
+        "payable": true,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0x6e7f485c"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " claim all pending rewards for the current account",
+          " After claiming, there is not anymore pending rewards for this account"
+        ],
+        "label": "RewardManager::claim",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0x5f8b7ca2"
       },
       {
         "args": [
@@ -885,43 +885,6 @@
       {
         "args": [
           {
-            "label": "request",
-            "type": {
-              "displayName": [
-                "metatransaction_external",
-                "MetaTxRollupCondEqInput1"
-              ],
-              "type": 48
-            }
-          },
-          {
-            "label": "signature",
-            "type": {
-              "displayName": [
-                "metatransaction_external",
-                "MetaTxRollupCondEqInput2"
-              ],
-              "type": 49
-            }
-          }
-        ],
-        "default": false,
-        "docs": [],
-        "label": "MetaTransaction::meta_tx_rollup_cond_eq",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 50
-        },
-        "selector": "0x8eb77024"
-      },
-      {
-        "args": [
-          {
             "label": "from",
             "type": {
               "displayName": [
@@ -952,9 +915,46 @@
             "ink",
             "MessageResult"
           ],
-          "type": 53
+          "type": 48
         },
         "selector": "0x3ecc267e"
+      },
+      {
+        "args": [
+          {
+            "label": "request",
+            "type": {
+              "displayName": [
+                "metatransaction_external",
+                "MetaTxRollupCondEqInput1"
+              ],
+              "type": 51
+            }
+          },
+          {
+            "label": "signature",
+            "type": {
+              "displayName": [
+                "metatransaction_external",
+                "MetaTxRollupCondEqInput2"
+              ],
+              "type": 54
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "MetaTransaction::meta_tx_rollup_cond_eq",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 55
+        },
+        "selector": "0x8eb77024"
       },
       {
         "args": [],
@@ -973,22 +973,6 @@
         "selector": "0x5e228753"
       },
       {
-        "args": [],
-        "default": false,
-        "docs": [],
-        "label": "Ownable::owner",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 60
-        },
-        "selector": "0x4fa43c8c"
-      },
-      {
         "args": [
           {
             "label": "new_owner",
@@ -997,7 +981,7 @@
                 "ownable_external",
                 "TransferOwnershipInput1"
               ],
-              "type": 61
+              "type": 60
             }
           }
         ],
@@ -1016,58 +1000,10 @@
         "selector": "0x11f43efd"
       },
       {
-        "args": [
-          {
-            "label": "role",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "GrantRoleInput1"
-              ],
-              "type": 3
-            }
-          },
-          {
-            "label": "account",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "GrantRoleInput2"
-              ],
-              "type": 61
-            }
-          }
-        ],
+        "args": [],
         "default": false,
         "docs": [],
-        "label": "AccessControl::grant_role",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 21
-        },
-        "selector": "0x4ac062fd"
-      },
-      {
-        "args": [
-          {
-            "label": "role",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "GetRoleAdminInput1"
-              ],
-              "type": 3
-            }
-          }
-        ],
-        "default": false,
-        "docs": [],
-        "label": "AccessControl::get_role_admin",
+        "label": "Ownable::owner",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -1075,46 +1011,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 23
+          "type": 61
         },
-        "selector": "0x83da3bb2"
-      },
-      {
-        "args": [
-          {
-            "label": "role",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "RevokeRoleInput1"
-              ],
-              "type": 3
-            }
-          },
-          {
-            "label": "account",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "RevokeRoleInput2"
-              ],
-              "type": 61
-            }
-          }
-        ],
-        "default": false,
-        "docs": [],
-        "label": "AccessControl::revoke_role",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 21
-        },
-        "selector": "0x6e4f0991"
+        "selector": "0x4fa43c8c"
       },
       {
         "args": [
@@ -1135,7 +1034,7 @@
                 "accesscontrol_external",
                 "RenounceRoleInput2"
               ],
-              "type": 61
+              "type": 60
             }
           }
         ],
@@ -1172,7 +1071,7 @@
                 "accesscontrol_external",
                 "HasRoleInput2"
               ],
-              "type": 61
+              "type": 60
             }
           }
         ],
@@ -1186,9 +1085,110 @@
             "ink",
             "MessageResult"
           ],
-          "type": 35
+          "type": 37
         },
         "selector": "0xc1d9ac18"
+      },
+      {
+        "args": [
+          {
+            "label": "role",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "GetRoleAdminInput1"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "AccessControl::get_role_admin",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 23
+        },
+        "selector": "0x83da3bb2"
+      },
+      {
+        "args": [
+          {
+            "label": "role",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "GrantRoleInput1"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "account",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "GrantRoleInput2"
+              ],
+              "type": 60
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "AccessControl::grant_role",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 21
+        },
+        "selector": "0x4ac062fd"
+      },
+      {
+        "args": [
+          {
+            "label": "role",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "RevokeRoleInput1"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "account",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "RevokeRoleInput2"
+              ],
+              "type": 60
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "AccessControl::revoke_role",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 21
+        },
+        "selector": "0x6e4f0991"
       },
       {
         "args": [
@@ -1199,7 +1199,7 @@
                 "upgradeable_external",
                 "SetCodeHashInput1"
               ],
-              "type": 56
+              "type": 52
             }
           }
         ],
@@ -2220,6 +2220,81 @@
       "id": 24,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 25
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 25
+          },
+          {
+            "name": "E",
+            "type": 11
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 26
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 26
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
@@ -2245,90 +2320,6 @@
           "traits",
           "config",
           "Config"
-        ]
-      }
-    },
-    {
-      "id": 25,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 26
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 11
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 26
-          },
-          {
-            "name": "E",
-            "type": 11
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 26,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 4
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 16
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 4
-          },
-          {
-            "name": "E",
-            "type": 16
-          }
-        ],
-        "path": [
-          "Result"
         ]
       }
     },
@@ -2381,17 +2372,22 @@
           "variant": {
             "variants": [
               {
+                "fields": [
+                  {
+                    "type": 4
+                  }
+                ],
                 "index": 0,
-                "name": "None"
+                "name": "Ok"
               },
               {
                 "fields": [
                   {
-                    "type": 24
+                    "type": 16
                   }
                 ],
                 "index": 1,
-                "name": "Some"
+                "name": "Err"
               }
             ]
           }
@@ -2399,11 +2395,15 @@
         "params": [
           {
             "name": "T",
-            "type": 24
+            "type": 4
+          },
+          {
+            "name": "E",
+            "type": 16
           }
         ],
         "path": [
-          "Option"
+          "Result"
         ]
       }
     },
@@ -2457,32 +2457,28 @@
             "variants": [
               {
                 "index": 0,
-                "name": "NotStarted"
+                "name": "None"
               },
               {
+                "fields": [
+                  {
+                    "type": 8
+                  }
+                ],
                 "index": 1,
-                "name": "Ongoing"
-              },
-              {
-                "index": 2,
-                "name": "WaitingResults"
-              },
-              {
-                "index": 3,
-                "name": "WaitingWinners"
-              },
-              {
-                "index": 4,
-                "name": "Closed"
+                "name": "Some"
               }
             ]
           }
         },
+        "params": [
+          {
+            "name": "T",
+            "type": 8
+          }
+        ],
         "path": [
-          "lotto",
-          "traits",
-          "raffle",
-          "Status"
+          "Option"
         ]
       }
     },
@@ -2536,28 +2532,32 @@
             "variants": [
               {
                 "index": 0,
-                "name": "None"
+                "name": "NotStarted"
               },
               {
-                "fields": [
-                  {
-                    "type": 9
-                  }
-                ],
                 "index": 1,
-                "name": "Some"
+                "name": "Ongoing"
+              },
+              {
+                "index": 2,
+                "name": "WaitingResults"
+              },
+              {
+                "index": 3,
+                "name": "WaitingWinners"
+              },
+              {
+                "index": 4,
+                "name": "Closed"
               }
             ]
           }
         },
-        "params": [
-          {
-            "name": "T",
-            "type": 9
-          }
-        ],
         "path": [
-          "Option"
+          "lotto",
+          "traits",
+          "raffle",
+          "Status"
         ]
       }
     },
@@ -2616,7 +2616,7 @@
               {
                 "fields": [
                   {
-                    "type": 8
+                    "type": 9
                   }
                 ],
                 "index": 1,
@@ -2628,7 +2628,7 @@
         "params": [
           {
             "name": "T",
-            "type": 8
+            "type": 9
           }
         ],
         "path": [
@@ -2682,98 +2682,6 @@
       "id": 36,
       "type": {
         "def": {
-          "primitive": "bool"
-        }
-      }
-    },
-    {
-      "id": 37,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 11
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 6
-          },
-          {
-            "name": "E",
-            "type": 11
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 38,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 39
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 11
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 39
-          },
-          {
-            "name": "E",
-            "type": 11
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 39,
-      "type": {
-        "def": {
           "variant": {
             "variants": [
               {
@@ -2800,6 +2708,98 @@
         ],
         "path": [
           "Option"
+        ]
+      }
+    },
+    {
+      "id": 37,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 38
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 38
+          },
+          {
+            "name": "E",
+            "type": 11
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "type": {
+        "def": {
+          "primitive": "bool"
+        }
+      }
+    },
+    {
+      "id": 39,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 6
+          },
+          {
+            "name": "E",
+            "type": 11
+          }
+        ],
+        "path": [
+          "Result"
         ]
       }
     },
@@ -3054,6 +3054,101 @@
       "id": 48,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 49
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 49
+          },
+          {
+            "name": "E",
+            "type": 11
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 49,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 50
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 53
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 50
+          },
+          {
+            "name": "E",
+            "type": 53
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 50,
+      "type": {
+        "def": {
+          "tuple": [
+            51,
+            52
+          ]
+        }
+      }
+    },
+    {
+      "id": 51,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
@@ -3088,102 +3183,27 @@
       }
     },
     {
-      "id": 49,
-      "type": {
-        "def": {
-          "array": {
-            "len": 65,
-            "type": 2
-          }
-        }
-      }
-    },
-    {
-      "id": 50,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 51
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 11
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 51
-          },
-          {
-            "name": "E",
-            "type": 11
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 51,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 4
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 52
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 4
-          },
-          {
-            "name": "E",
-            "type": 52
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
       "id": 52,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "Hash"
+        ]
+      }
+    },
+    {
+      "id": 53,
       "type": {
         "def": {
           "variant": {
@@ -3230,7 +3250,18 @@
       }
     },
     {
-      "id": 53,
+      "id": 54,
+      "type": {
+        "def": {
+          "array": {
+            "len": 65,
+            "type": 2
+          }
+        }
+      }
+    },
+    {
+      "id": 55,
       "type": {
         "def": {
           "variant": {
@@ -3238,7 +3269,7 @@
               {
                 "fields": [
                   {
-                    "type": 54
+                    "type": 56
                   }
                 ],
                 "index": 0,
@@ -3259,7 +3290,7 @@
         "params": [
           {
             "name": "T",
-            "type": 54
+            "type": 56
           },
           {
             "name": "E",
@@ -3272,7 +3303,7 @@
       }
     },
     {
-      "id": 54,
+      "id": 56,
       "type": {
         "def": {
           "variant": {
@@ -3280,7 +3311,7 @@
               {
                 "fields": [
                   {
-                    "type": 55
+                    "type": 4
                   }
                 ],
                 "index": 0,
@@ -3289,7 +3320,7 @@
               {
                 "fields": [
                   {
-                    "type": 52
+                    "type": 53
                   }
                 ],
                 "index": 1,
@@ -3301,46 +3332,15 @@
         "params": [
           {
             "name": "T",
-            "type": 55
+            "type": 4
           },
           {
             "name": "E",
-            "type": 52
+            "type": 53
           }
         ],
         "path": [
           "Result"
-        ]
-      }
-    },
-    {
-      "id": 55,
-      "type": {
-        "def": {
-          "tuple": [
-            48,
-            56
-          ]
-        }
-      }
-    },
-    {
-      "id": 56,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "type": 1,
-                "typeName": "[u8; 32]"
-              }
-            ]
-          }
-        },
-        "path": [
-          "ink_primitives",
-          "types",
-          "Hash"
         ]
       }
     },
@@ -3461,48 +3461,6 @@
           "variant": {
             "variants": [
               {
-                "fields": [
-                  {
-                    "type": 61
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 11
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 61
-          },
-          {
-            "name": "E",
-            "type": 11
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 61,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
                 "index": 0,
                 "name": "None"
               },
@@ -3526,6 +3484,48 @@
         ],
         "path": [
           "Option"
+        ]
+      }
+    },
+    {
+      "id": 61,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 60
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 60
+          },
+          {
+            "name": "E",
+            "type": 11
+          }
+        ],
+        "path": [
+          "Result"
         ]
       }
     },
