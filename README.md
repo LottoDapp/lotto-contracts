@@ -39,6 +39,7 @@ A new `CheckNumber` request is sent to the message queue. This message is waitin
 Next, the phat contract sends the winners (or an empty list if there is no winner) and the smart contract save them on the blockchain.
 A new lottery can start. Each lottery is identified by an identifier: `raffle_id`.
 
+More information to build the ink! smart contract and run integration tests [here](./ink/README.md).
 
 ## Phat contract
 
@@ -46,3 +47,5 @@ The phat contract is an offchain rollup in charge to proceed the messages sent b
 - when a `DrawNumbers` request is sent by the smart contract, the phat contract uses the `pink_extension::vrf` to randomly provide the winning numbers.
 - when a `CheckWinners` request is sent by the smart contract, the phat contract reads the SubQuery indexer to check the winners and send them to ink! smart contract.
 You can find more information about the communication between ink! smart contract and phat contract [here](https://github.com/Phala-Network/phat-offchain-rollup/).
+
+More information to build the phat contract and run unit tests [here](./phat/contracts/lotto_draw/README.md).
