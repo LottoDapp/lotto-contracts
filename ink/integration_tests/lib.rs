@@ -522,16 +522,22 @@ mod e2e_tests {
             get_current_status(&mut client, &contract_id).await
         );
 
-        // send the winners => no winners
+        // send the winners => no winners => new raffle starts again automatically
         bob_sends_winners(&mut client, &contract_id, raffle_id, results, vec![]).await;
         assert_eq!(
-            Status::Closed,
+            Status::Ongoing,
             get_current_status(&mut client, &contract_id).await
         );
 
-        // fund again the contract before starting the raffle
-        fund(&mut client, &contract_id, 100).await;
+        raffle_id = raffle_id + 1;
+        assert_eq!(
+            raffle_id,
+            get_current_raffle_id(&mut client, &contract_id).await
+        );
 
+        // fund more the contract
+        fund(&mut client, &contract_id, 100).await;
+        /*
         // start the raffle 3
         raffle_id = alice_starts_raffle(&mut client, &contract_id).await;
         assert_eq!(3, raffle_id);
@@ -539,6 +545,7 @@ mod e2e_tests {
             Status::Ongoing,
             get_current_status(&mut client, &contract_id).await
         );
+         */
 
         // dave and charly participates
         participates(
