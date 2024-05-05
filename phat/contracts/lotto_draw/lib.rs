@@ -327,17 +327,30 @@ mod lotto_draw {
             Ok(response.encode())
         }
 
-        /// Simulate and return numbers for the lotto_draw (admin only - for dev purpose)
+        /// Verify if the winning numbers for a raffle are valid (admin only)
         #[ink(message)]
-        pub fn get_numbers(
+        pub fn verify_numbers(
             &self,
             raffle_id: RaffleId,
             nb_numbers: u8,
             smallest_number: Number,
             biggest_number: Number,
-        ) -> Result<Vec<Number>> {
+            numbers: Vec<Number>,
+        ) -> Result<bool> {
             self.ensure_owner()?;
-            self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
+            let winning_numbers =
+                self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)?;
+            if winning_numbers.len() != numbers.len() {
+                return Ok(false);
+            }
+
+            for n in &numbers {
+                if !winning_numbers.contains(n) {
+                    return Ok(false);
+                }
+            }
+
+            Ok(true)
         }
 
         fn inner_get_numbers(
@@ -399,13 +412,6 @@ mod lotto_draw {
                 .ok_or(ContractError::AddOverFlow)?;
 
             Ok(r as Number)
-        }
-
-        /// Simulate and return the winners (admin only - for dev purpose)
-        #[ink(message)]
-        pub fn get_winners(&self, draw_num: u32, numbers: Vec<Number>) -> Result<Vec<AccountId>> {
-            self.ensure_owner()?;
-            self.inner_get_winners(draw_num, &numbers)
         }
 
         fn inner_get_winners(
@@ -655,7 +661,7 @@ mod lotto_draw {
             let biggest_number = 50;
 
             let result = lotto
-                .get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
+                .inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
                 .unwrap();
             assert_eq!(nb_numbers as usize, result.len());
             for &n in result.iter() {
@@ -679,7 +685,7 @@ mod lotto_draw {
             let biggest_number = 5;
 
             let result = lotto
-                .get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
+                .inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
                 .unwrap();
             assert_eq!(nb_numbers as usize, result.len());
             for &n in result.iter() {
@@ -705,19 +711,58 @@ mod lotto_draw {
 
             for i in 0..100 {
                 let result = lotto
-                    .get_numbers(i, nb_numbers, smallest_number, biggest_number)
+                    .inner_get_numbers(i, nb_numbers, smallest_number, biggest_number)
                     .unwrap();
                 // this result must be different from the previous ones
                 results.iter().for_each(|r| assert_ne!(result, *r));
 
                 // same request message means same result
                 let result_2 = lotto
-                    .get_numbers(i, nb_numbers, smallest_number, biggest_number)
+                    .inner_get_numbers(i, nb_numbers, smallest_number, biggest_number)
                     .unwrap();
                 assert_eq!(result, result_2);
 
                 results.push(result);
             }
+        }
+
+        #[ink::test]
+        fn test_verify_numbers() {
+            let _ = env_logger::try_init();
+            pink_extension_runtime::mock_ext::mock_all_ext();
+
+            let lotto = init_contract();
+
+            let raffle_id = 1;
+            let nb_numbers = 5;
+            let smallest_number = 1;
+            let biggest_number = 50;
+
+            let numbers = lotto
+                .inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
+                .unwrap();
+
+            assert_eq!(
+                Ok(true),
+                lotto.verify_numbers(
+                    raffle_id,
+                    nb_numbers,
+                    smallest_number,
+                    biggest_number,
+                    numbers.clone()
+                )
+            );
+
+            assert_eq!(
+                Ok(false),
+                lotto.verify_numbers(
+                    raffle_id + 1,
+                    nb_numbers,
+                    smallest_number,
+                    biggest_number,
+                    numbers.clone()
+                )
+            );
         }
 
         #[ink::test]
@@ -730,7 +775,7 @@ mod lotto_draw {
             let draw_num = 2;
             let numbers = vec![15, 1, 44, 28];
 
-            let winners = lotto.get_winners(draw_num, numbers).unwrap();
+            let winners = lotto.inner_get_winners(draw_num, &numbers).unwrap();
             ink::env::debug_println!("winners: {winners:?}");
         }
 
@@ -744,7 +789,7 @@ mod lotto_draw {
             let draw_num = 0;
             let numbers = vec![150, 1, 44, 2800];
 
-            let winners = lotto.get_winners(draw_num, numbers).unwrap();
+            let winners = lotto.inner_get_winners(draw_num, &numbers).unwrap();
             assert_eq!(0, winners.len());
         }
 
@@ -758,7 +803,7 @@ mod lotto_draw {
             let draw_num = 0;
             let numbers = vec![];
 
-            let result = lotto.get_winners(draw_num, numbers);
+            let result = lotto.inner_get_winners(draw_num, &numbers);
             assert_eq!(Err(ContractError::NoNumber), result);
         }
 

@@ -1,6 +1,6 @@
 [package]
 name = "lotto_draw"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["GuiGou"]
 edition = "2021"
 

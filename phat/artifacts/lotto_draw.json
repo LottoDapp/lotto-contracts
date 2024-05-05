@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x7034113d0af945c4dda714c7b34a206c45cba7027c0e73bf19425fe1d8a62e61",
+    "hash": "0x5922ca3cb0603eb045e2f2e9985a783467b3561b840c5f1549ef9cd5870fa08a",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "lotto_draw",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "authors": [
       "GuiGou"
     ]
@@ -50,7 +50,7 @@
         "displayName": [
           "Balance"
         ],
-        "type": 34
+        "type": 32
       },
       "blockNumber": {
         "displayName": [
@@ -62,20 +62,20 @@
         "displayName": [
           "ChainExtension"
         ],
-        "type": 37
+        "type": 35
       },
       "hash": {
         "displayName": [
           "Hash"
         ],
-        "type": 35
+        "type": 33
       },
       "maxEventTopics": 4,
       "timestamp": {
         "displayName": [
           "Timestamp"
         ],
-        "type": 36
+        "type": 34
       }
     },
     "events": [],
@@ -428,34 +428,6 @@
               ],
               "type": 25
             }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Simulate and return numbers for the lotto_draw (admin only - for dev purpose)"
-        ],
-        "label": "get_numbers",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 29
-        },
-        "selector": "0x6e2df655"
-      },
-      {
-        "args": [
-          {
-            "label": "draw_num",
-            "type": {
-              "displayName": [
-                "u32"
-              ],
-              "type": 23
-            }
           },
           {
             "label": "numbers",
@@ -469,9 +441,9 @@
         ],
         "default": false,
         "docs": [
-          " Simulate and return the winners (admin only - for dev purpose)"
+          " Verify if the winning numbers for a raffle id is valid (admin only)"
         ],
-        "label": "get_winners",
+        "label": "verify_numbers",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -479,9 +451,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 31
+          "type": 29
         },
-        "selector": "0xc51514c9"
+        "selector": "0x810aabee"
       }
     ]
   },
@@ -1585,7 +1557,7 @@
               {
                 "fields": [
                   {
-                    "type": 26
+                    "type": 31
                   }
                 ],
                 "index": 0,
@@ -1606,7 +1578,7 @@
         "params": [
           {
             "name": "T",
-            "type": 26
+            "type": 31
           },
           {
             "name": "E",
@@ -1622,98 +1594,12 @@
       "id": 31,
       "type": {
         "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 32
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 32
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 32,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 33
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 33
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 33,
-      "type": {
-        "def": {
-          "sequence": {
-            "type": 0
-          }
+          "primitive": "bool"
         }
       }
     },
     {
-      "id": 34,
+      "id": 32,
       "type": {
         "def": {
           "primitive": "u128"
@@ -1721,7 +1607,7 @@
       }
     },
     {
-      "id": 35,
+      "id": 33,
       "type": {
         "def": {
           "composite": {
@@ -1741,7 +1627,7 @@
       }
     },
     {
-      "id": 36,
+      "id": 34,
       "type": {
         "def": {
           "primitive": "u64"
@@ -1749,7 +1635,7 @@
       }
     },
     {
-      "id": 37,
+      "id": 35,
       "type": {
         "def": {
           "variant": {}
