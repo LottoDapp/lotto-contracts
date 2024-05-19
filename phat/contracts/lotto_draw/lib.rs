@@ -145,6 +145,7 @@ mod lotto_draw {
         AddOverFlow,
         SubOverFlow,
         // error when verify the numbers
+        InvalidContractId,
         CurrentRaffleUnknown,
         UnauthorizedRaffle,
     }
@@ -316,6 +317,7 @@ mod lotto_draw {
         #[ink(message)]
         pub fn verify_numbers(
             &self,
+            contract_id: ContractId,
             raffle_id: RaffleId,
             nb_numbers: u8,
             smallest_number: Number,
@@ -324,6 +326,12 @@ mod lotto_draw {
         ) -> Result<bool> {
 
             let config = self.ensure_client_configured()?;
+
+            // check if the target contract is correct
+            if contract_id != config.contract_id  {
+                return Err(ContractError::InvalidContractId)
+            }
+
             let mut client = connect(config)?;
 
             const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
@@ -333,9 +341,22 @@ mod lotto_draw {
                 .log_err("verify numbers: current raffle unknown")?
                 .ok_or(ContractError::CurrentRaffleUnknown)?;
 
+            // verify the winning numbers only for the past raffles
             if raffle_id >= current_raffle  {
                 return Err(ContractError::UnauthorizedRaffle)
             }
+
+            self.inner_verify_numbers(raffle_id, nb_numbers, smallest_number, biggest_number, numbers)
+        }
+
+        pub fn inner_verify_numbers(
+            &self,
+            raffle_id: RaffleId,
+            nb_numbers: u8,
+            smallest_number: Number,
+            biggest_number: Number,
+            numbers: Vec<Number>,
+        ) -> Result<bool> {
 
             let winning_numbers =
                 self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)?;
@@ -363,6 +384,8 @@ mod lotto_draw {
                 "Request received for raffle {raffle_id} - draw {nb_numbers} numbers between {smallest_number} and {biggest_number}"
             );
 
+            let contract_id = self.ensure_client_configured()?.contract_id;
+
             if smallest_number > biggest_number {
                 return Err(ContractError::MinGreaterThanMax);
             }
@@ -375,6 +398,7 @@ mod lotto_draw {
                 let mut salt: Vec<u8> = Vec::new();
                 salt.extend_from_slice(&i.to_be_bytes());
                 salt.extend_from_slice(&raffle_id.to_be_bytes());
+                salt.extend_from_slice(&contract_id);
 
                 // lotto_draw the number
                 let number = self.inner_get_number(salt, smallest_number, biggest_number)?;
@@ -615,7 +639,7 @@ mod lotto_draw {
             lotto
                 .config_indexer("https://query.substrate.fi/lotto-subquery-shibuya".to_string())
                 .unwrap();
-            lotto.set_attest_key(Some(attest_key)).unwrap();
+            //lotto.set_attest_key(Some(attest_key)).unwrap();
 
             lotto
         }
@@ -716,7 +740,7 @@ mod lotto_draw {
 
             assert_eq!(
                 Ok(true),
-                lotto.verify_numbers(
+                lotto.inner_verify_numbers(
                     raffle_id,
                     nb_numbers,
                     smallest_number,
@@ -727,8 +751,54 @@ mod lotto_draw {
 
             assert_eq!(
                 Ok(false),
-                lotto.verify_numbers(
+                lotto.inner_verify_numbers(
                     raffle_id + 1,
+                    nb_numbers,
+                    smallest_number,
+                    biggest_number,
+                    numbers.clone()
+                )
+            );
+        }
+
+        #[ink::test]
+        fn test_verify_numbers_with_bad_contract_id() {
+            let _ = env_logger::try_init();
+            pink_extension_runtime::mock_ext::mock_all_ext();
+
+            let mut lotto = init_contract();
+
+            let raffle_id = 1;
+            let nb_numbers = 5;
+            let smallest_number = 1;
+            let biggest_number = 50;
+
+            let numbers = lotto
+                .inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
+                .unwrap();
+
+            assert_eq!(
+                Ok(true),
+                lotto.inner_verify_numbers(
+                    raffle_id,
+                    nb_numbers,
+                    smallest_number,
+                    biggest_number,
+                    numbers.clone()
+                )
+            );
+
+            let target_contract = lotto.get_target_contract().unwrap();
+
+            let bad_contract_id : ContractId = [0; 32];
+            lotto
+                .config_target_contract(target_contract.0, target_contract.1, target_contract.2, bad_contract_id.to_vec(), None)
+                .unwrap();
+
+            assert_eq!(
+                Ok(false),
+                lotto.inner_verify_numbers(
+                    raffle_id,
                     nb_numbers,
                     smallest_number,
                     biggest_number,
