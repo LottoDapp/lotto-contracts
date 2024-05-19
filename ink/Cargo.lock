@@ -3221,7 +3221,7 @@ dependencies = [
 [[package]]
 name = "phat_rollup_anchor_ink"
 version = "0.0.1"
-source = "git+https://github.com/GuiGou12358/phat-offchain-rollup#873c69ecbabbbbe786e3bd3316b6aadf547fd0d5"
+source = "git+https://github.com/Phala-Network/phat-offchain-rollup#65f6933c8be1619c512cfef5ed4c01a5c036e53b"
 dependencies = [
  "ink",
  "openbrush",
