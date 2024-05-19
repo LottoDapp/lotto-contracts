@@ -110,15 +110,6 @@ pub mod lotto_contract {
             RollupAnchorError::UnsupportedAction
         }
     }
-    /*
-       /// convertor from RaffleError to RollupAnchorError
-       impl From<error::RaffleError> for rollup_anchor::RollupAnchorError {
-           fn from(error: error::RaffleError) -> Self {
-               ink::env::debug_println!("Error: {:?}", error);
-               RollupAnchorError::UnsupportedAction
-           }
-       }
-    */
 
     /// Message to request the lotto lotto_draw or the list of winners
     /// message pushed in the queue by the Ink! smart contract and read by the offchain rollup
