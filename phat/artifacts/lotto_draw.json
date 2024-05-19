@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x625d229393b586b8f75be3b57d99033279ffd4bd2594fc879930f8e153c73278",
+    "hash": "0xc7c7b7bb883b38b5b09472df960aa2ad016017917e915268ce58c3ecffaa1236",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
@@ -363,6 +363,15 @@
       },
       {
         "args": [
+          {
+            "label": "contract_id",
+            "type": {
+              "displayName": [
+                "ContractId"
+              ],
+              "type": 1
+            }
+          },
           {
             "label": "raffle_id",
             "type": {
@@ -1129,10 +1138,14 @@
               },
               {
                 "index": 16,
-                "name": "CurrentRaffleUnknown"
+                "name": "InvalidContractId"
               },
               {
                 "index": 17,
+                "name": "CurrentRaffleUnknown"
+              },
+              {
+                "index": 18,
                 "name": "UnauthorizedRaffle"
               }
             ]
