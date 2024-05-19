@@ -144,7 +144,11 @@ mod lotto_draw {
         MinGreaterThanMax,
         AddOverFlow,
         SubOverFlow,
+        // error when verify the numbers
+        CurrentRaffleUnknown,
+        UnauthorizedRaffle,
     }
+
 
     type Result<T> = core::result::Result<T, ContractError>;
 
@@ -189,25 +193,6 @@ mod lotto_draw {
             let mut output = <hash::Blake2x256 as hash::HashOutput>::Type::default();
             ink::env::hash_bytes::<hash::Blake2x256>(&input, &mut output);
             output.to_vec()
-        }
-
-        /// Set attestor key.
-        ///
-        /// For dev purpose. (admin only)
-        #[ink(message)]
-        pub fn set_attest_key(&mut self, attest_key: Option<Vec<u8>>) -> Result<()> {
-            self.ensure_owner()?;
-            self.attest_key = match attest_key {
-                Some(key) => key.try_into().or(Err(ContractError::InvalidKeyLength))?,
-                None => {
-                    const NONCE: &[u8] = b"lotto";
-                    let private_key = signing::derive_sr25519_key(NONCE);
-                    private_key[..32]
-                        .try_into()
-                        .or(Err(ContractError::InvalidKeyLength))?
-                }
-            };
-            Ok(())
         }
 
         /// Gets the sender address used by this rollup (in case of meta-transaction)
@@ -327,7 +312,7 @@ mod lotto_draw {
             Ok(response.encode())
         }
 
-        /// Verify if the winning numbers for a raffle are valid (admin only)
+        /// Verify if the winning numbers for a raffle are valid (only for past raffles)
         #[ink(message)]
         pub fn verify_numbers(
             &self,
@@ -337,7 +322,21 @@ mod lotto_draw {
             biggest_number: Number,
             numbers: Vec<Number>,
         ) -> Result<bool> {
-            self.ensure_owner()?;
+
+            let config = self.ensure_client_configured()?;
+            let mut client = connect(config)?;
+
+            const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
+
+            let current_raffle : RaffleId = client
+                .get(&CURRENT_RAFFLE)
+                .log_err("verify numbers: current raffle unknown")?
+                .ok_or(ContractError::CurrentRaffleUnknown)?;
+
+            if raffle_id >= current_raffle  {
+                return Err(ContractError::UnauthorizedRaffle)
+            }
+
             let winning_numbers =
                 self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)?;
             if winning_numbers.len() != numbers.len() {
@@ -596,33 +595,6 @@ mod lotto_draw {
                 attest_key,
                 sender_key,
             }
-        }
-
-        #[ink::test]
-        fn test_update_attestor_key() {
-            let _ = env_logger::try_init();
-            pink_extension_runtime::mock_ext::mock_all_ext();
-
-            let mut lotto = Lotto::default();
-
-            // Secret key and address of Alice in localhost
-            let sk_alice: [u8; 32] = [0x01; 32];
-            let address_alice = hex_literal::hex!(
-                "189dac29296d31814dc8c56cf3d36a0543372bba7538fa322a4aebfebc39e056"
-            );
-
-            let initial_attestor_address = lotto.get_attest_address();
-            assert_ne!(address_alice, initial_attestor_address.as_slice());
-
-            lotto.set_attest_key(Some(sk_alice.into())).unwrap();
-
-            let attestor_address = lotto.get_attest_address();
-            assert_eq!(address_alice, attestor_address.as_slice());
-
-            lotto.set_attest_key(None).unwrap();
-
-            let attestor_address = lotto.get_attest_address();
-            assert_eq!(initial_attestor_address, attestor_address);
         }
 
         fn init_contract() -> Lotto {

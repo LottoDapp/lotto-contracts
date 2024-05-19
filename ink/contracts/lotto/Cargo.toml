@@ -1,6 +1,6 @@
 [package]
 name = "lotto_contract"
-version = "0.1.1"
+version = "1.0.0"
 authors = ["guigou"]
 edition = "2021"
 

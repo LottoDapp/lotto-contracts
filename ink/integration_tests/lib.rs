@@ -10,7 +10,6 @@ mod e2e_tests {
     use openbrush::traits::Balance;
     use scale::Encode;
 
-    use lotto::traits::config::raffleconfig_external::RaffleConfig;
     use lotto::traits::config::Config;
     use lotto::traits::raffle::raffle_external::Raffle;
     use lotto::traits::reward::rewardmanager_external::RewardManager;
@@ -123,13 +122,6 @@ mod e2e_tests {
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|contract| contract.rollup_cond_eq(vec![], vec![], actions.clone()));
 
-        /*
-               let result = client
-                   .call_dry_run(&ink_e2e::bob(), &rollup_cond_eq, 0, None)
-                   .await;
-               assert_eq!(result.debug_message(), "e");
-        */
-
         let result = client
             .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
             .await
@@ -158,13 +150,6 @@ mod e2e_tests {
         let actions = vec![HandleActionInput::Reply(payload.encode())];
         let rollup_cond_eq = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|contract| contract.rollup_cond_eq(vec![], vec![], actions.clone()));
-
-        /*
-               let result = client
-                   .call_dry_run(&ink_e2e::bob(), &rollup_cond_eq, 0, None)
-                   .await;
-               assert_eq!(result.debug_message(), "e");
-        */
 
         let result = client
             .call(&ink_e2e::bob(), rollup_cond_eq, 0, None)
@@ -196,11 +181,26 @@ mod e2e_tests {
             build_message::<lotto_contract::ContractRef>(contract_id.clone())
                 .call(|contract| contract.get_current_raffle_id());
 
-        let result = client
+        let raffle_id = client
             .call_dry_run(&ink_e2e::alice(), &get_current_raffle_id, 0, None)
-            .await;
+            .await
+            .return_value();
 
-        result.return_value()
+        // check if the kv store contains the same value
+        const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
+
+        let get_value =
+            build_message::<lotto_contract::ContractRef>(contract_id.clone())
+                .call(|contract| contract.get_value(CURRENT_RAFFLE.encode()));
+
+        let kv_raffle_id = client
+            .call_dry_run(&ink_e2e::alice(), &get_value, 0, None)
+            .await
+            .return_value();
+
+        assert_eq!(Some(raffle_id.encode()), kv_raffle_id);
+
+        raffle_id
     }
 
     async fn get_current_status(
@@ -330,12 +330,6 @@ mod e2e_tests {
         let claim_rewards = build_message::<lotto_contract::ContractRef>(contract_id.clone())
             .call(|contract| contract.claim());
 
-        /*
-                let result = client
-                    .call_dry_run(signer, &claim_rewards, 0, None)
-                    .await;
-                assert_eq!(result.debug_message(), "e");
-        */
         client
             .call(signer, claim_rewards, 0, None)
             .await
@@ -537,15 +531,6 @@ mod e2e_tests {
 
         // fund more the contract
         fund(&mut client, &contract_id, 100).await;
-        /*
-        // start the raffle 3
-        raffle_id = alice_starts_raffle(&mut client, &contract_id).await;
-        assert_eq!(3, raffle_id);
-        assert_eq!(
-            Status::Ongoing,
-            get_current_status(&mut client, &contract_id).await
-        );
-         */
 
         // dave and charly participates
         participates(

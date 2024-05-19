@@ -4,6 +4,8 @@ use crate::traits::{Number, RaffleId};
 use ink::prelude::vec::Vec;
 use ink::storage::Mapping;
 use openbrush::traits::{AccountId, Storage};
+use phat_rollup_anchor_ink::traits::rollup_anchor::RollupAnchor;
+use scale::Encode;
 
 #[derive(Default, Debug)]
 #[openbrush::storage_item]
@@ -29,7 +31,7 @@ pub enum Status {
 }
 
 #[openbrush::trait_definition]
-pub trait Raffle: Storage<Data> {
+pub trait Raffle: Storage<Data> + RollupAnchor {
     /// Start a new raffle
     fn start_new_raffle(&mut self) -> Result<RaffleId, RaffleError> {
         // check the status
@@ -39,7 +41,17 @@ pub trait Raffle: Storage<Data> {
             return Err(RaffleError::IncorrectStatus);
         }
 
+        // increment the raffle id
         let new_raffle_id = self.data::<Data>().current_raffle_id + 1;
+
+        // save the current raffle id in the kv store
+        const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
+        RollupAnchor::set_value(
+            self,
+            &CURRENT_RAFFLE.encode(),
+            Some(&new_raffle_id.encode()),
+        );
+
         self.data::<Data>().current_raffle_id = new_raffle_id;
         self.data::<Data>().status = Status::Ongoing;
 
@@ -159,7 +171,7 @@ pub trait Raffle: Storage<Data> {
         }
     }
 
-    /// check if the user can participate to the currnt raffle
+    /// check if the user can participate in the current raffle
     fn can_participate(&mut self) -> Result<(), RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::Ongoing {

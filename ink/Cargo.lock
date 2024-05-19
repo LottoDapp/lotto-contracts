@@ -2704,17 +2704,18 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "lotto"
-version = "1.1.0"
+version = "1.0.0"
 dependencies = [
  "ink",
  "openbrush",
  "parity-scale-codec",
+ "phat_rollup_anchor_ink",
  "scale-info",
 ]
 
 [[package]]
 name = "lotto_contract"
-version = "0.1.1"
+version = "1.0.0"
 dependencies = [
  "ink",
  "lotto",
