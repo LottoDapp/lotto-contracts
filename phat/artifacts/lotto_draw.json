@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x5922ca3cb0603eb045e2f2e9985a783467b3561b840c5f1549ef9cd5870fa08a",
+    "hash": "0x625d229393b586b8f75be3b57d99033279ffd4bd2594fc879930f8e153c73278",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "lotto_draw",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "authors": [
       "GuiGou"
     ]
@@ -142,36 +142,6 @@
         "selector": "0x4620f939"
       },
       {
-        "args": [
-          {
-            "label": "attest_key",
-            "type": {
-              "displayName": [
-                "Option"
-              ],
-              "type": 10
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Set attestor key.",
-          "",
-          " For dev purpose. (admin only)"
-        ],
-        "label": "set_attest_key",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 11
-        },
-        "selector": "0x85cb106e"
-      },
-      {
         "args": [],
         "default": false,
         "docs": [
@@ -185,7 +155,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 14
+          "type": 10
         },
         "selector": "0x75de500c"
       },
@@ -203,7 +173,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 12
         },
         "selector": "0x0d425434"
       },
@@ -251,7 +221,7 @@
               "displayName": [
                 "Option"
               ],
-              "type": 10
+              "type": 11
             }
           }
         ],
@@ -267,7 +237,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 15
         },
         "selector": "0x8b9485bf"
       },
@@ -313,7 +283,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 15
         },
         "selector": "0xa7d92be0"
       },
@@ -341,7 +311,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 15
         },
         "selector": "0x107e33ea"
       },
@@ -441,7 +411,7 @@
         ],
         "default": false,
         "docs": [
-          " Verify if the winning numbers for a raffle id is valid (admin only)"
+          " Verify if the winning numbers for a raffle are valid (only for past raffles)"
         ],
         "label": "verify_numbers",
         "mutates": false,
@@ -847,6 +817,48 @@
           "variant": {
             "variants": [
               {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 11
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
                 "index": 0,
                 "name": "None"
               },
@@ -874,7 +886,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 12,
       "type": {
         "def": {
           "variant": {
@@ -882,7 +894,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 13
                   }
                 ],
                 "index": 0,
@@ -903,7 +915,7 @@
         "params": [
           {
             "name": "T",
-            "type": 12
+            "type": 13
           },
           {
             "name": "E",
@@ -916,7 +928,95 @@
       }
     },
     {
-      "id": 12,
+      "id": 13,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": {
+        "def": {
+          "tuple": [
+            3,
+            2,
+            2,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 16
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 16
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 16,
       "type": {
         "def": {
           "variant": {
@@ -933,7 +1033,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -949,7 +1049,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 17
           }
         ],
         "path": [
@@ -958,7 +1058,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 17,
       "type": {
         "def": {
           "variant": {
@@ -1026,6 +1126,14 @@
               {
                 "index": 15,
                 "name": "SubOverFlow"
+              },
+              {
+                "index": 16,
+                "name": "CurrentRaffleUnknown"
+              },
+              {
+                "index": 17,
+                "name": "UnauthorizedRaffle"
               }
             ]
           }
@@ -1035,136 +1143,6 @@
           "lotto_draw",
           "ContractError"
         ]
-      }
-    },
-    {
-      "id": 14,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 10
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 10
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 15,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 16
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 16
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 16,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "index": 0,
-                "name": "None"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 17
-                  }
-                ],
-                "index": 1,
-                "name": "Some"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 17
-          }
-        ],
-        "path": [
-          "Option"
-        ]
-      }
-    },
-    {
-      "id": 17,
-      "type": {
-        "def": {
-          "tuple": [
-            3,
-            2,
-            2,
-            1
-          ]
-        }
       }
     },
     {
@@ -1293,7 +1271,7 @@
               {
                 "fields": [
                   {
-                    "type": 10
+                    "type": 11
                   }
                 ],
                 "index": 0,
@@ -1302,7 +1280,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -1314,11 +1292,11 @@
         "params": [
           {
             "name": "T",
-            "type": 10
+            "type": 11
           },
           {
             "name": "E",
-            "type": 13
+            "type": 17
           }
         ],
         "path": [
@@ -1482,7 +1460,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -1498,7 +1476,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 17
           }
         ],
         "path": [
@@ -1566,7 +1544,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -1582,7 +1560,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 17
           }
         ],
         "path": [
