@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x5922ca3cb0603eb045e2f2e9985a783467b3561b840c5f1549ef9cd5870fa08a",
+    "hash": "0x869abd114310eda2a47c879dddb7c5dc6245886225fe0f751897fcdb9a2f533c",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "lotto_draw",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "authors": [
       "GuiGou"
     ]
@@ -50,32 +50,32 @@
         "displayName": [
           "Balance"
         ],
-        "type": 32
+        "type": 28
       },
       "blockNumber": {
         "displayName": [
           "BlockNumber"
         ],
-        "type": 23
+        "type": 22
       },
       "chainExtension": {
         "displayName": [
           "ChainExtension"
         ],
-        "type": 35
+        "type": 31
       },
       "hash": {
         "displayName": [
           "Hash"
         ],
-        "type": 33
+        "type": 29
       },
       "maxEventTopics": 4,
       "timestamp": {
         "displayName": [
           "Timestamp"
         ],
-        "type": 34
+        "type": 30
       }
     },
     "events": [],
@@ -142,36 +142,6 @@
         "selector": "0x4620f939"
       },
       {
-        "args": [
-          {
-            "label": "attest_key",
-            "type": {
-              "displayName": [
-                "Option"
-              ],
-              "type": 10
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Set attestor key.",
-          "",
-          " For dev purpose. (admin only)"
-        ],
-        "label": "set_attest_key",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 11
-        },
-        "selector": "0x85cb106e"
-      },
-      {
         "args": [],
         "default": false,
         "docs": [
@@ -185,7 +155,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 14
+          "type": 10
         },
         "selector": "0x75de500c"
       },
@@ -203,7 +173,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 12
         },
         "selector": "0x0d425434"
       },
@@ -251,7 +221,7 @@
               "displayName": [
                 "Option"
               ],
-              "type": 10
+              "type": 11
             }
           }
         ],
@@ -267,7 +237,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 15
         },
         "selector": "0x8b9485bf"
       },
@@ -313,7 +283,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 15
         },
         "selector": "0xa7d92be0"
       },
@@ -341,7 +311,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 15
         },
         "selector": "0x107e33ea"
       },
@@ -366,40 +336,21 @@
       {
         "args": [
           {
-            "label": "request",
+            "label": "contract_id",
             "type": {
               "displayName": [
-                "LottoRequestMessage"
+                "ContractId"
               ],
-              "type": 22
+              "type": 1
             }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Simulate the request (admin only - for dev purpose)"
-        ],
-        "label": "simulate_handle_request",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 27
-        },
-        "selector": "0x2babdad7"
-      },
-      {
-        "args": [
+          },
           {
             "label": "raffle_id",
             "type": {
               "displayName": [
                 "RaffleId"
               ],
-              "type": 23
+              "type": 22
             }
           },
           {
@@ -417,7 +368,7 @@
               "displayName": [
                 "Number"
               ],
-              "type": 25
+              "type": 23
             }
           },
           {
@@ -426,7 +377,7 @@
               "displayName": [
                 "Number"
               ],
-              "type": 25
+              "type": 23
             }
           },
           {
@@ -435,13 +386,13 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 26
+              "type": 24
             }
           }
         ],
         "default": false,
         "docs": [
-          " Verify if the winning numbers for a raffle id is valid (admin only)"
+          " Verify if the winning numbers for a raffle are valid (only for past raffles)"
         ],
         "label": "verify_numbers",
         "mutates": false,
@@ -451,7 +402,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 29
+          "type": 25
         },
         "selector": "0x810aabee"
       }
@@ -847,6 +798,48 @@
           "variant": {
             "variants": [
               {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 11
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
                 "index": 0,
                 "name": "None"
               },
@@ -874,7 +867,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 12,
       "type": {
         "def": {
           "variant": {
@@ -882,7 +875,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 13
                   }
                 ],
                 "index": 0,
@@ -903,7 +896,7 @@
         "params": [
           {
             "name": "T",
-            "type": 12
+            "type": 13
           },
           {
             "name": "E",
@@ -916,7 +909,95 @@
       }
     },
     {
-      "id": 12,
+      "id": 13,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": {
+        "def": {
+          "tuple": [
+            3,
+            2,
+            2,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 16
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 16
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 16,
       "type": {
         "def": {
           "variant": {
@@ -933,7 +1014,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -949,7 +1030,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 17
           }
         ],
         "path": [
@@ -958,7 +1039,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 17,
       "type": {
         "def": {
           "variant": {
@@ -1026,6 +1107,18 @@
               {
                 "index": 15,
                 "name": "SubOverFlow"
+              },
+              {
+                "index": 16,
+                "name": "InvalidContractId"
+              },
+              {
+                "index": 17,
+                "name": "CurrentRaffleUnknown"
+              },
+              {
+                "index": 18,
+                "name": "UnauthorizedRaffle"
               }
             ]
           }
@@ -1035,136 +1128,6 @@
           "lotto_draw",
           "ContractError"
         ]
-      }
-    },
-    {
-      "id": 14,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 10
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 10
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 15,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 16
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 16
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 16,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "index": 0,
-                "name": "None"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 17
-                  }
-                ],
-                "index": 1,
-                "name": "Some"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 17
-          }
-        ],
-        "path": [
-          "Option"
-        ]
-      }
-    },
-    {
-      "id": 17,
-      "type": {
-        "def": {
-          "tuple": [
-            3,
-            2,
-            2,
-            1
-          ]
-        }
       }
     },
     {
@@ -1293,7 +1256,7 @@
               {
                 "fields": [
                   {
-                    "type": 10
+                    "type": 11
                   }
                 ],
                 "index": 0,
@@ -1302,7 +1265,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -1314,11 +1277,11 @@
         "params": [
           {
             "name": "T",
-            "type": 10
+            "type": 11
           },
           {
             "name": "E",
-            "type": 13
+            "type": 17
           }
         ],
         "path": [
@@ -1330,82 +1293,12 @@
       "id": 22,
       "type": {
         "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "raffle_id",
-                "type": 23,
-                "typeName": "RaffleId"
-              },
-              {
-                "name": "request",
-                "type": 24,
-                "typeName": "Request"
-              }
-            ]
-          }
-        },
-        "path": [
-          "lotto_draw",
-          "lotto_draw",
-          "LottoRequestMessage"
-        ]
-      }
-    },
-    {
-      "id": 23,
-      "type": {
-        "def": {
           "primitive": "u32"
         }
       }
     },
     {
-      "id": 24,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 2,
-                    "typeName": "u8"
-                  },
-                  {
-                    "type": 25,
-                    "typeName": "Number"
-                  },
-                  {
-                    "type": 25,
-                    "typeName": "Number"
-                  }
-                ],
-                "index": 0,
-                "name": "DrawNumbers"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 26,
-                    "typeName": "Vec<Number>"
-                  }
-                ],
-                "index": 1,
-                "name": "CheckWinners"
-              }
-            ]
-          }
-        },
-        "path": [
-          "lotto_draw",
-          "lotto_draw",
-          "Request"
-        ]
-      }
-    },
-    {
-      "id": 25,
+      "id": 23,
       "type": {
         "def": {
           "primitive": "u16"
@@ -1413,185 +1306,101 @@
       }
     },
     {
-      "id": 26,
+      "id": 24,
       "type": {
         "def": {
           "sequence": {
-            "type": 25
+            "type": 23
           }
         }
       }
     },
     {
+      "id": 25,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 26
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 26
+          },
+          {
+            "name": "E",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 27
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 17
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 27
+          },
+          {
+            "name": "E",
+            "type": 17
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
       "id": 27,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 28
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 28
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 28,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 9
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 9
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 29,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 30
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 30
-          },
-          {
-            "name": "E",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 30,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 31
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 31
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 31,
       "type": {
         "def": {
           "primitive": "bool"
@@ -1599,7 +1408,7 @@
       }
     },
     {
-      "id": 32,
+      "id": 28,
       "type": {
         "def": {
           "primitive": "u128"
@@ -1607,7 +1416,7 @@
       }
     },
     {
-      "id": 33,
+      "id": 29,
       "type": {
         "def": {
           "composite": {
@@ -1627,7 +1436,7 @@
       }
     },
     {
-      "id": 34,
+      "id": 30,
       "type": {
         "def": {
           "primitive": "u64"
@@ -1635,7 +1444,7 @@
       }
     },
     {
-      "id": 35,
+      "id": 31,
       "type": {
         "def": {
           "variant": {}

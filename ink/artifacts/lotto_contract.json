@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x6c99447555ef59ba8e192d052da9c14b61a2caa20447e09b31c6487ecb763b78",
+    "hash": "0x6623c5a032b563af37ffbd7e1608b92bef7684d82e7bb64a9adf83019b8c81dc",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.76.0",
     "build_info": {
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "lotto_contract",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "authors": [
       "guigou"
     ]
@@ -649,35 +649,6 @@
         "selector": "0x319b058b"
       },
       {
-        "args": [
-          {
-            "label": "from",
-            "type": {
-              "displayName": [
-                "rewardmanager_external",
-                "GetPendingRewardsFromInput1"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " return the pending rewards for a given account."
-        ],
-        "label": "RewardManager::get_pending_rewards_from",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 35
-        },
-        "selector": "0x6af8ea62"
-      },
-      {
         "args": [],
         "default": false,
         "docs": [
@@ -691,7 +662,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 37
+          "type": 35
         },
         "selector": "0xb9a36ad1"
       },
@@ -731,6 +702,82 @@
         "selector": "0x5f8b7ca2"
       },
       {
+        "args": [],
+        "default": false,
+        "docs": [
+          " return true if the current account has pending rewards"
+        ],
+        "label": "RewardManager::has_pending_rewards",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 36
+        },
+        "selector": "0x80598ed8"
+      },
+      {
+        "args": [
+          {
+            "label": "from",
+            "type": {
+              "displayName": [
+                "rewardmanager_external",
+                "GetPendingRewardsFromInput1"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " return the pending rewards for a given account."
+        ],
+        "label": "RewardManager::get_pending_rewards_from",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 38
+        },
+        "selector": "0x6af8ea62"
+      },
+      {
+        "args": [
+          {
+            "label": "from",
+            "type": {
+              "displayName": [
+                "rewardmanager_external",
+                "HasPendingRewardsFromInput1"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " return true if the given account has pending rewards"
+        ],
+        "label": "RewardManager::has_pending_rewards_from",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 36
+        },
+        "selector": "0x41c593ae"
+      },
+      {
         "args": [
           {
             "label": "from",
@@ -759,53 +806,6 @@
           "type": 20
         },
         "selector": "0xa7118ada"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [
-          " return true if the current account has pending rewards"
-        ],
-        "label": "RewardManager::has_pending_rewards",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 38
-        },
-        "selector": "0x80598ed8"
-      },
-      {
-        "args": [
-          {
-            "label": "from",
-            "type": {
-              "displayName": [
-                "rewardmanager_external",
-                "HasPendingRewardsFromInput1"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " return true if the given account has pending rewards"
-        ],
-        "label": "RewardManager::has_pending_rewards_from",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 38
-        },
-        "selector": "0x41c593ae"
       },
       {
         "args": [
@@ -956,38 +956,6 @@
         "selector": "0x3ecc267e"
       },
       {
-        "args": [],
-        "default": false,
-        "docs": [],
-        "label": "Ownable::owner",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 57
-        },
-        "selector": "0x4fa43c8c"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [],
-        "label": "Ownable::renounce_ownership",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 59
-        },
-        "selector": "0x5e228753"
-      },
-      {
         "args": [
           {
             "label": "new_owner",
@@ -996,7 +964,7 @@
                 "ownable_external",
                 "TransferOwnershipInput1"
               ],
-              "type": 58
+              "type": 57
             }
           }
         ],
@@ -1010,9 +978,78 @@
             "ink",
             "MessageResult"
           ],
-          "type": 59
+          "type": 58
         },
         "selector": "0x11f43efd"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [],
+        "label": "Ownable::renounce_ownership",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 58
+        },
+        "selector": "0x5e228753"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [],
+        "label": "Ownable::owner",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 61
+        },
+        "selector": "0x4fa43c8c"
+      },
+      {
+        "args": [
+          {
+            "label": "role",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "HasRoleInput1"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "address",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "HasRoleInput2"
+              ],
+              "type": 57
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "AccessControl::has_role",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 36
+        },
+        "selector": "0xc1d9ac18"
       },
       {
         "args": [
@@ -1060,7 +1097,7 @@
                 "accesscontrol_external",
                 "RevokeRoleInput2"
               ],
-              "type": 58
+              "type": 57
             }
           }
         ],
@@ -1085,80 +1122,6 @@
             "type": {
               "displayName": [
                 "accesscontrol_external",
-                "RenounceRoleInput1"
-              ],
-              "type": 3
-            }
-          },
-          {
-            "label": "account",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "RenounceRoleInput2"
-              ],
-              "type": 58
-            }
-          }
-        ],
-        "default": false,
-        "docs": [],
-        "label": "AccessControl::renounce_role",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 24
-        },
-        "selector": "0xeaf1248a"
-      },
-      {
-        "args": [
-          {
-            "label": "role",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "HasRoleInput1"
-              ],
-              "type": 3
-            }
-          },
-          {
-            "label": "address",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
-                "HasRoleInput2"
-              ],
-              "type": 58
-            }
-          }
-        ],
-        "default": false,
-        "docs": [],
-        "label": "AccessControl::has_role",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 38
-        },
-        "selector": "0xc1d9ac18"
-      },
-      {
-        "args": [
-          {
-            "label": "role",
-            "type": {
-              "displayName": [
-                "accesscontrol_external",
                 "GrantRoleInput1"
               ],
               "type": 3
@@ -1171,7 +1134,7 @@
                 "accesscontrol_external",
                 "GrantRoleInput2"
               ],
-              "type": 58
+              "type": 57
             }
           }
         ],
@@ -1188,6 +1151,43 @@
           "type": 24
         },
         "selector": "0x4ac062fd"
+      },
+      {
+        "args": [
+          {
+            "label": "role",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "RenounceRoleInput1"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "account",
+            "type": {
+              "displayName": [
+                "accesscontrol_external",
+                "RenounceRoleInput2"
+              ],
+              "type": 57
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "AccessControl::renounce_role",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 24
+        },
+        "selector": "0xeaf1248a"
       },
       {
         "args": [
@@ -2644,7 +2644,7 @@
               {
                 "fields": [
                   {
-                    "type": 36
+                    "type": 6
                   }
                 ],
                 "index": 0,
@@ -2665,7 +2665,7 @@
         "params": [
           {
             "name": "T",
-            "type": 36
+            "type": 6
           },
           {
             "name": "E",
@@ -2684,42 +2684,9 @@
           "variant": {
             "variants": [
               {
-                "index": 0,
-                "name": "None"
-              },
-              {
                 "fields": [
                   {
-                    "type": 6
-                  }
-                ],
-                "index": 1,
-                "name": "Some"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 6
-          }
-        ],
-        "path": [
-          "Option"
-        ]
-      }
-    },
-    {
-      "id": 37,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 6
+                    "type": 37
                   }
                 ],
                 "index": 0,
@@ -2740,7 +2707,7 @@
         "params": [
           {
             "name": "T",
-            "type": 6
+            "type": 37
           },
           {
             "name": "E",
@@ -2750,6 +2717,14 @@
         "path": [
           "Result"
         ]
+      }
+    },
+    {
+      "id": 37,
+      "type": {
+        "def": {
+          "primitive": "bool"
+        }
       }
     },
     {
@@ -2798,8 +2773,33 @@
       "id": 39,
       "type": {
         "def": {
-          "primitive": "bool"
-        }
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 6
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 6
+          }
+        ],
+        "path": [
+          "Option"
+        ]
       }
     },
     {
@@ -3350,48 +3350,6 @@
           "variant": {
             "variants": [
               {
-                "fields": [
-                  {
-                    "type": 58
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 11
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 58
-          },
-          {
-            "name": "E",
-            "type": 11
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 58,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
                 "index": 0,
                 "name": "None"
               },
@@ -3419,7 +3377,7 @@
       }
     },
     {
-      "id": 59,
+      "id": 58,
       "type": {
         "def": {
           "variant": {
@@ -3427,7 +3385,7 @@
               {
                 "fields": [
                   {
-                    "type": 60
+                    "type": 59
                   }
                 ],
                 "index": 0,
@@ -3448,7 +3406,7 @@
         "params": [
           {
             "name": "T",
-            "type": 60
+            "type": 59
           },
           {
             "name": "E",
@@ -3461,7 +3419,7 @@
       }
     },
     {
-      "id": 60,
+      "id": 59,
       "type": {
         "def": {
           "variant": {
@@ -3478,7 +3436,7 @@
               {
                 "fields": [
                   {
-                    "type": 61
+                    "type": 60
                   }
                 ],
                 "index": 1,
@@ -3494,7 +3452,7 @@
           },
           {
             "name": "E",
-            "type": 61
+            "type": 60
           }
         ],
         "path": [
@@ -3503,7 +3461,7 @@
       }
     },
     {
-      "id": 61,
+      "id": 60,
       "type": {
         "def": {
           "variant": {
@@ -3525,6 +3483,48 @@
           "errors",
           "ownable",
           "OwnableError"
+        ]
+      }
+    },
+    {
+      "id": 61,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 57
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 57
+          },
+          {
+            "name": "E",
+            "type": 11
+          }
+        ],
+        "path": [
+          "Result"
         ]
       }
     },
@@ -3635,7 +3635,7 @@
               {
                 "fields": [
                   {
-                    "type": 61,
+                    "type": 60,
                     "typeName": "OwnableError"
                   }
                 ],

@@ -39,7 +39,9 @@ pub trait Raffle: Storage<Data> {
             return Err(RaffleError::IncorrectStatus);
         }
 
+        // increment the raffle id
         let new_raffle_id = self.data::<Data>().current_raffle_id + 1;
+
         self.data::<Data>().current_raffle_id = new_raffle_id;
         self.data::<Data>().status = Status::Ongoing;
 
@@ -159,7 +161,7 @@ pub trait Raffle: Storage<Data> {
         }
     }
 
-    /// check if the user can participate to the currnt raffle
+    /// check if the user can participate in the current raffle
     fn can_participate(&mut self) -> Result<(), RaffleError> {
         // check the status
         if self.data::<Data>().status != Status::Ongoing {

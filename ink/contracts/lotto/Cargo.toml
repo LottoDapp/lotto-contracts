@@ -1,6 +1,6 @@
 [package]
 name = "lotto_contract"
-version = "0.1.1"
+version = "1.0.0"
 authors = ["guigou"]
 edition = "2021"
 
@@ -9,7 +9,7 @@ ink = { version = "4.3.0", default-features = false}
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 openbrush = { version = "4.0.0-beta", git = "https://github.com/Brushfam/openbrush-contracts", default-features = false, features = ["ownable", "access_control", "upgradeable"] }
-phat_rollup_anchor_ink = { git = "https://github.com/GuiGou12358/phat-offchain-rollup" , default-features = false}
+phat_rollup_anchor_ink = { git = "https://github.com/Phala-Network/phat-offchain-rollup" , default-features = false}
 lotto = { path = "../../logics", default-features = false }
 
 [lib]

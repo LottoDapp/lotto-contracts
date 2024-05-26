@@ -144,6 +144,10 @@ mod lotto_draw {
         MinGreaterThanMax,
         AddOverFlow,
         SubOverFlow,
+        // error when verify the numbers
+        InvalidContractId,
+        CurrentRaffleUnknown,
+        UnauthorizedRaffle,
     }
 
     type Result<T> = core::result::Result<T, ContractError>;
@@ -189,25 +193,6 @@ mod lotto_draw {
             let mut output = <hash::Blake2x256 as hash::HashOutput>::Type::default();
             ink::env::hash_bytes::<hash::Blake2x256>(&input, &mut output);
             output.to_vec()
-        }
-
-        /// Set attestor key.
-        ///
-        /// For dev purpose. (admin only)
-        #[ink(message)]
-        pub fn set_attest_key(&mut self, attest_key: Option<Vec<u8>>) -> Result<()> {
-            self.ensure_owner()?;
-            self.attest_key = match attest_key {
-                Some(key) => key.try_into().or(Err(ContractError::InvalidKeyLength))?,
-                None => {
-                    const NONCE: &[u8] = b"lotto";
-                    let private_key = signing::derive_sr25519_key(NONCE);
-                    private_key[..32]
-                        .try_into()
-                        .or(Err(ContractError::InvalidKeyLength))?
-                }
-            };
-            Ok(())
         }
 
         /// Gets the sender address used by this rollup (in case of meta-transaction)
@@ -319,17 +304,48 @@ mod lotto_draw {
             })
         }
 
-        /// Simulate the request (admin only - for dev purpose)
-        #[ink(message)]
-        pub fn simulate_handle_request(&self, request: LottoRequestMessage) -> Result<Vec<u8>> {
-            self.ensure_owner()?;
-            let response = self.handle_request(request)?;
-            Ok(response.encode())
-        }
-
-        /// Verify if the winning numbers for a raffle are valid (admin only)
+        /// Verify if the winning numbers for a raffle are valid (only for past raffles)
         #[ink(message)]
         pub fn verify_numbers(
+            &self,
+            contract_id: ContractId,
+            raffle_id: RaffleId,
+            nb_numbers: u8,
+            smallest_number: Number,
+            biggest_number: Number,
+            numbers: Vec<Number>,
+        ) -> Result<bool> {
+            let config = self.ensure_client_configured()?;
+
+            // check if the target contract is correct
+            if contract_id != config.contract_id {
+                return Err(ContractError::InvalidContractId);
+            }
+
+            let mut client = connect(config)?;
+
+            const LAST_RAFFLE_FOR_VERIF: u32 = ink::selector_id!("LAST_RAFFLE_FOR_VERIF");
+
+            let last_raffle: RaffleId = client
+                .get(&LAST_RAFFLE_FOR_VERIF)
+                .log_err("verify numbers: last raffle unknown")?
+                .ok_or(ContractError::CurrentRaffleUnknown)?;
+
+            // verify the winning numbers only for the past raffles
+            if raffle_id > last_raffle {
+                return Err(ContractError::UnauthorizedRaffle);
+            }
+
+            self.inner_verify_numbers(
+                raffle_id,
+                nb_numbers,
+                smallest_number,
+                biggest_number,
+                numbers,
+            )
+        }
+
+        pub fn inner_verify_numbers(
             &self,
             raffle_id: RaffleId,
             nb_numbers: u8,
@@ -337,7 +353,6 @@ mod lotto_draw {
             biggest_number: Number,
             numbers: Vec<Number>,
         ) -> Result<bool> {
-            self.ensure_owner()?;
             let winning_numbers =
                 self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)?;
             if winning_numbers.len() != numbers.len() {
@@ -364,6 +379,8 @@ mod lotto_draw {
                 "Request received for raffle {raffle_id} - draw {nb_numbers} numbers between {smallest_number} and {biggest_number}"
             );
 
+            let contract_id = self.ensure_client_configured()?.contract_id;
+
             if smallest_number > biggest_number {
                 return Err(ContractError::MinGreaterThanMax);
             }
@@ -376,6 +393,7 @@ mod lotto_draw {
                 let mut salt: Vec<u8> = Vec::new();
                 salt.extend_from_slice(&i.to_be_bytes());
                 salt.extend_from_slice(&raffle_id.to_be_bytes());
+                salt.extend_from_slice(&contract_id);
 
                 // lotto_draw the number
                 let number = self.inner_get_number(salt, smallest_number, biggest_number)?;
@@ -565,7 +583,7 @@ mod lotto_draw {
             /// The rollup anchor address on the target blockchain
             contract_id: ContractId,
             /// When we want to manually set the attestor key for signing the message (only dev purpose)
-            attest_key: Vec<u8>,
+            //attest_key: Vec<u8>,
             /// When we want to use meta tx
             sender_key: Option<Vec<u8>>,
         }
@@ -583,7 +601,7 @@ mod lotto_draw {
                 .expect("hex decode failed")
                 .try_into()
                 .expect("incorrect length");
-            let attest_key = hex::decode(get_env("ATTEST_KEY")).expect("hex decode failed");
+            //let attest_key = hex::decode(get_env("ATTEST_KEY")).expect("hex decode failed");
             let sender_key = std::env::var("SENDER_KEY")
                 .map(|s| hex::decode(s).expect("hex decode failed"))
                 .ok();
@@ -593,36 +611,9 @@ mod lotto_draw {
                 pallet_id,
                 call_id,
                 contract_id: contract_id.into(),
-                attest_key,
+                //attest_key,
                 sender_key,
             }
-        }
-
-        #[ink::test]
-        fn test_update_attestor_key() {
-            let _ = env_logger::try_init();
-            pink_extension_runtime::mock_ext::mock_all_ext();
-
-            let mut lotto = Lotto::default();
-
-            // Secret key and address of Alice in localhost
-            let sk_alice: [u8; 32] = [0x01; 32];
-            let address_alice = hex_literal::hex!(
-                "189dac29296d31814dc8c56cf3d36a0543372bba7538fa322a4aebfebc39e056"
-            );
-
-            let initial_attestor_address = lotto.get_attest_address();
-            assert_ne!(address_alice, initial_attestor_address.as_slice());
-
-            lotto.set_attest_key(Some(sk_alice.into())).unwrap();
-
-            let attestor_address = lotto.get_attest_address();
-            assert_eq!(address_alice, attestor_address.as_slice());
-
-            lotto.set_attest_key(None).unwrap();
-
-            let attestor_address = lotto.get_attest_address();
-            assert_eq!(initial_attestor_address, attestor_address);
         }
 
         fn init_contract() -> Lotto {
@@ -631,7 +622,7 @@ mod lotto_draw {
                 pallet_id,
                 call_id,
                 contract_id,
-                attest_key,
+                //attest_key,
                 sender_key,
             } = config();
 
@@ -643,7 +634,7 @@ mod lotto_draw {
             lotto
                 .config_indexer("https://query.substrate.fi/lotto-subquery-shibuya".to_string())
                 .unwrap();
-            lotto.set_attest_key(Some(attest_key)).unwrap();
+            //lotto.set_attest_key(Some(attest_key)).unwrap();
 
             lotto
         }
@@ -744,7 +735,7 @@ mod lotto_draw {
 
             assert_eq!(
                 Ok(true),
-                lotto.verify_numbers(
+                lotto.inner_verify_numbers(
                     raffle_id,
                     nb_numbers,
                     smallest_number,
@@ -755,8 +746,60 @@ mod lotto_draw {
 
             assert_eq!(
                 Ok(false),
-                lotto.verify_numbers(
+                lotto.inner_verify_numbers(
                     raffle_id + 1,
+                    nb_numbers,
+                    smallest_number,
+                    biggest_number,
+                    numbers.clone()
+                )
+            );
+        }
+
+        #[ink::test]
+        fn test_verify_numbers_with_bad_contract_id() {
+            let _ = env_logger::try_init();
+            pink_extension_runtime::mock_ext::mock_all_ext();
+
+            let mut lotto = init_contract();
+
+            let raffle_id = 1;
+            let nb_numbers = 5;
+            let smallest_number = 1;
+            let biggest_number = 50;
+
+            let numbers = lotto
+                .inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)
+                .unwrap();
+
+            assert_eq!(
+                Ok(true),
+                lotto.inner_verify_numbers(
+                    raffle_id,
+                    nb_numbers,
+                    smallest_number,
+                    biggest_number,
+                    numbers.clone()
+                )
+            );
+
+            let target_contract = lotto.get_target_contract().unwrap();
+
+            let bad_contract_id: ContractId = [0; 32];
+            lotto
+                .config_target_contract(
+                    target_contract.0,
+                    target_contract.1,
+                    target_contract.2,
+                    bad_contract_id.to_vec(),
+                    None,
+                )
+                .unwrap();
+
+            assert_eq!(
+                Ok(false),
+                lotto.inner_verify_numbers(
+                    raffle_id,
                     nb_numbers,
                     smallest_number,
                     biggest_number,
