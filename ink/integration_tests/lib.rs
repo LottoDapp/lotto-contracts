@@ -8,6 +8,7 @@ mod e2e_tests {
     use openbrush::contracts::access_control::accesscontrol_external::AccessControl;
     use openbrush::traits::AccountId;
     use openbrush::traits::Balance;
+    use scale::Decode;
     use scale::Encode;
 
     use lotto::traits::config::Config;
@@ -186,21 +187,30 @@ mod e2e_tests {
             .await
             .return_value();
 
-        // check if the kv store contains the same value
-        const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
+        raffle_id
+    }
 
-        let get_value =
-            build_message::<lotto_contract::ContractRef>(contract_id.clone())
-                .call(|contract| contract.get_value(CURRENT_RAFFLE.encode()));
+    async fn get_last_raffle_for_verif(
+        client: &mut ink_e2e::Client<PolkadotConfig, DefaultEnvironment>,
+        contract_id: &AccountId,
+    ) -> Option<RaffleId> {
+        // check in the kv store
+        const LAST_RAFFLE_FOR_VERIF: u32 = ink::selector_id!("LAST_RAFFLE_FOR_VERIF");
 
-        let kv_raffle_id = client
+        let get_value = build_message::<lotto_contract::ContractRef>(contract_id.clone())
+            .call(|contract| contract.get_value(LAST_RAFFLE_FOR_VERIF.encode()));
+
+        let raffle_id = client
             .call_dry_run(&ink_e2e::alice(), &get_value, 0, None)
             .await
             .return_value();
 
-        assert_eq!(Some(raffle_id.encode()), kv_raffle_id);
-
-        raffle_id
+        match raffle_id {
+            Some(r) => Some(
+                RaffleId::decode(&mut r.as_slice()).expect("Cannot decode Last raffle for verif"),
+            ),
+            None => None,
+        }
     }
 
     async fn get_current_status(
@@ -446,12 +456,22 @@ mod e2e_tests {
             get_current_status(&mut client, &contract_id).await
         );
 
+        assert_eq!(
+            None,
+            get_last_raffle_for_verif(&mut client, &contract_id).await
+        );
+
         // send the results
         let results: Vec<Number> = vec![5, 40, 8, 2];
         bob_sends_results(&mut client, &contract_id, raffle_id, results.clone()).await;
         assert_eq!(
             Status::WaitingWinners,
             get_current_status(&mut client, &contract_id).await
+        );
+
+        assert_eq!(
+            Some(1),
+            get_last_raffle_for_verif(&mut client, &contract_id).await
         );
 
         // send the winners (dave wins 100)
@@ -508,12 +528,24 @@ mod e2e_tests {
             get_current_status(&mut client, &contract_id).await
         );
 
+        // check the last raffle for which we can verify the numbers
+        assert_eq!(
+            Some(1),
+            get_last_raffle_for_verif(&mut client, &contract_id).await
+        );
+
         // send the results
         let results: Vec<Number> = vec![8, 10, 4, 1];
         bob_sends_results(&mut client, &contract_id, raffle_id, results.clone()).await;
         assert_eq!(
             Status::WaitingWinners,
             get_current_status(&mut client, &contract_id).await
+        );
+
+        // check the last raffle for which we can verify the numbers
+        assert_eq!(
+            Some(2),
+            get_last_raffle_for_verif(&mut client, &contract_id).await
         );
 
         // send the winners => no winners => new raffle starts again automatically

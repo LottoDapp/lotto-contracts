@@ -15,6 +15,7 @@ pub mod lotto_contract {
     use phat_rollup_anchor_ink::traits::{
         meta_transaction, meta_transaction::*, rollup_anchor, rollup_anchor::*,
     };
+    use scale::Encode;
 
     /// Event emitted when the participant is registered
     #[ink(event)]
@@ -305,6 +306,10 @@ pub mod lotto_contract {
 
             // set the result
             Raffle::set_results(self, raffle_id, numbers.clone())?;
+
+            // save in the kv store the last raffle id used for verification
+            const LAST_RAFFLE: u32 = ink::selector_id!("LAST_RAFFLE_FOR_VERIF");
+            RollupAnchor::set_value(self, &LAST_RAFFLE.encode(), Some(&raffle_id.encode()));
 
             // emmit the event
             self.env().emit_event(ResultReceived {

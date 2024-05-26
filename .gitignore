@@ -1,2 +1,4 @@
 target
 Cargo.lock
+/phat/contracts/lotto_draw/.env
+/.env

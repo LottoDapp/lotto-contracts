@@ -2709,7 +2709,6 @@ dependencies = [
  "ink",
  "openbrush",
  "parity-scale-codec",
- "phat_rollup_anchor_ink",
  "scale-info",
 ]
 

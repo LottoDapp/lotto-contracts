@@ -4,8 +4,6 @@ use crate::traits::{Number, RaffleId};
 use ink::prelude::vec::Vec;
 use ink::storage::Mapping;
 use openbrush::traits::{AccountId, Storage};
-use phat_rollup_anchor_ink::traits::rollup_anchor::RollupAnchor;
-use scale::Encode;
 
 #[derive(Default, Debug)]
 #[openbrush::storage_item]
@@ -31,7 +29,7 @@ pub enum Status {
 }
 
 #[openbrush::trait_definition]
-pub trait Raffle: Storage<Data> + RollupAnchor {
+pub trait Raffle: Storage<Data> {
     /// Start a new raffle
     fn start_new_raffle(&mut self) -> Result<RaffleId, RaffleError> {
         // check the status
@@ -43,14 +41,6 @@ pub trait Raffle: Storage<Data> + RollupAnchor {
 
         // increment the raffle id
         let new_raffle_id = self.data::<Data>().current_raffle_id + 1;
-
-        // save the current raffle id in the kv store
-        const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
-        RollupAnchor::set_value(
-            self,
-            &CURRENT_RAFFLE.encode(),
-            Some(&new_raffle_id.encode()),
-        );
 
         self.data::<Data>().current_raffle_id = new_raffle_id;
         self.data::<Data>().status = Status::Ongoing;

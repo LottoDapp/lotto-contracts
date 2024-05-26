@@ -150,7 +150,6 @@ mod lotto_draw {
         UnauthorizedRaffle,
     }
 
-
     type Result<T> = core::result::Result<T, ContractError>;
 
     impl From<phat_offchain_rollup::Error> for ContractError {
@@ -305,14 +304,6 @@ mod lotto_draw {
             })
         }
 
-        /// Simulate the request (admin only - for dev purpose)
-        #[ink(message)]
-        pub fn simulate_handle_request(&self, request: LottoRequestMessage) -> Result<Vec<u8>> {
-            self.ensure_owner()?;
-            let response = self.handle_request(request)?;
-            Ok(response.encode())
-        }
-
         /// Verify if the winning numbers for a raffle are valid (only for past raffles)
         #[ink(message)]
         pub fn verify_numbers(
@@ -324,29 +315,34 @@ mod lotto_draw {
             biggest_number: Number,
             numbers: Vec<Number>,
         ) -> Result<bool> {
-
             let config = self.ensure_client_configured()?;
 
             // check if the target contract is correct
-            if contract_id != config.contract_id  {
-                return Err(ContractError::InvalidContractId)
+            if contract_id != config.contract_id {
+                return Err(ContractError::InvalidContractId);
             }
 
             let mut client = connect(config)?;
 
-            const CURRENT_RAFFLE: u32 = ink::selector_id!("CURRENT_RAFFLE");
+            const LAST_RAFFLE_FOR_VERIF: u32 = ink::selector_id!("LAST_RAFFLE_FOR_VERIF");
 
-            let current_raffle : RaffleId = client
-                .get(&CURRENT_RAFFLE)
-                .log_err("verify numbers: current raffle unknown")?
+            let last_raffle: RaffleId = client
+                .get(&LAST_RAFFLE_FOR_VERIF)
+                .log_err("verify numbers: last raffle unknown")?
                 .ok_or(ContractError::CurrentRaffleUnknown)?;
 
             // verify the winning numbers only for the past raffles
-            if raffle_id >= current_raffle  {
-                return Err(ContractError::UnauthorizedRaffle)
+            if raffle_id > last_raffle {
+                return Err(ContractError::UnauthorizedRaffle);
             }
 
-            self.inner_verify_numbers(raffle_id, nb_numbers, smallest_number, biggest_number, numbers)
+            self.inner_verify_numbers(
+                raffle_id,
+                nb_numbers,
+                smallest_number,
+                biggest_number,
+                numbers,
+            )
         }
 
         pub fn inner_verify_numbers(
@@ -357,7 +353,6 @@ mod lotto_draw {
             biggest_number: Number,
             numbers: Vec<Number>,
         ) -> Result<bool> {
-
             let winning_numbers =
                 self.inner_get_numbers(raffle_id, nb_numbers, smallest_number, biggest_number)?;
             if winning_numbers.len() != numbers.len() {
@@ -588,7 +583,7 @@ mod lotto_draw {
             /// The rollup anchor address on the target blockchain
             contract_id: ContractId,
             /// When we want to manually set the attestor key for signing the message (only dev purpose)
-            attest_key: Vec<u8>,
+            //attest_key: Vec<u8>,
             /// When we want to use meta tx
             sender_key: Option<Vec<u8>>,
         }
@@ -606,7 +601,7 @@ mod lotto_draw {
                 .expect("hex decode failed")
                 .try_into()
                 .expect("incorrect length");
-            let attest_key = hex::decode(get_env("ATTEST_KEY")).expect("hex decode failed");
+            //let attest_key = hex::decode(get_env("ATTEST_KEY")).expect("hex decode failed");
             let sender_key = std::env::var("SENDER_KEY")
                 .map(|s| hex::decode(s).expect("hex decode failed"))
                 .ok();
@@ -616,7 +611,7 @@ mod lotto_draw {
                 pallet_id,
                 call_id,
                 contract_id: contract_id.into(),
-                attest_key,
+                //attest_key,
                 sender_key,
             }
         }
@@ -627,7 +622,7 @@ mod lotto_draw {
                 pallet_id,
                 call_id,
                 contract_id,
-                attest_key,
+                //attest_key,
                 sender_key,
             } = config();
 
@@ -790,9 +785,15 @@ mod lotto_draw {
 
             let target_contract = lotto.get_target_contract().unwrap();
 
-            let bad_contract_id : ContractId = [0; 32];
+            let bad_contract_id: ContractId = [0; 32];
             lotto
-                .config_target_contract(target_contract.0, target_contract.1, target_contract.2, bad_contract_id.to_vec(), None)
+                .config_target_contract(
+                    target_contract.0,
+                    target_contract.1,
+                    target_contract.2,
+                    bad_contract_id.to_vec(),
+                    None,
+                )
                 .unwrap();
 
             assert_eq!(
