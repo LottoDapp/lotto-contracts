@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0x869abd114310eda2a47c879dddb7c5dc6245886225fe0f751897fcdb9a2f533c",
+    "hash": "0xb62b87c417e1e5077a49fb1f6e1a908b3b009226ce84ea5e45257014df55151d",
     "language": "ink! 4.3.0",
-    "compiler": "rustc 1.76.0",
+    "compiler": "rustc 1.80.1",
     "build_info": {
-      "build_mode": "Release",
-      "cargo_contract_version": "3.2.0",
+      "build_mode": "Debug",
+      "cargo_contract_version": "4.1.1",
       "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
       "wasm_opt_settings": {
         "keep_debug_symbols": false,
@@ -15,11 +15,12 @@
   },
   "contract": {
     "name": "lotto_draw",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "authors": [
       "GuiGou"
     ]
   },
+  "image": null,
   "spec": {
     "constructors": [
       {
@@ -1110,14 +1111,18 @@
               },
               {
                 "index": 16,
-                "name": "InvalidContractId"
+                "name": "DivByZero"
               },
               {
                 "index": 17,
-                "name": "CurrentRaffleUnknown"
+                "name": "InvalidContractId"
               },
               {
                 "index": 18,
+                "name": "CurrentRaffleUnknown"
+              },
+              {
+                "index": 19,
                 "name": "UnauthorizedRaffle"
               }
             ]
