@@ -20,7 +20,7 @@ mod lotto_draw {
 
     /// Message to request the lotto lotto_draw or the list of winners
     /// message pushed in the queue by the Ink! smart contract and read by the offchain rollup
-    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[derive(Eq, PartialEq, Clone, Debug, scale::Encode, scale::Decode)]
     #[cfg_attr(
         feature = "std",
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
@@ -32,7 +32,7 @@ mod lotto_draw {
         request: Request,
     }
 
-    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[derive(Eq, PartialEq, Clone, Debug, scale::Encode, scale::Decode)]
     #[cfg_attr(
         feature = "std",
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
@@ -49,7 +49,7 @@ mod lotto_draw {
 
     /// Message sent to provide the lotto lotto_draw or the list of winners
     /// response pushed in the queue by the offchain rollup and read by the Ink! smart contract
-    #[derive(Encode, Decode)]
+    #[derive(Encode, Decode, Debug)]
     struct LottoResponseMessage {
         /// initial request
         request: LottoRequestMessage,
@@ -57,7 +57,7 @@ mod lotto_draw {
         response: Response,
     }
 
-    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode)]
+    #[derive(Eq, PartialEq, Clone, scale::Encode, scale::Decode, Debug)]
     #[cfg_attr(
         feature = "std",
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
@@ -144,6 +144,7 @@ mod lotto_draw {
         MinGreaterThanMax,
         AddOverFlow,
         SubOverFlow,
+        DivByZero,
         // error when verify the numbers
         InvalidContractId,
         CurrentRaffleUnknown,
@@ -276,6 +277,8 @@ mod lotto_draw {
                 .log_err("answer_request: failed to read queue")?
                 .ok_or(ContractError::NoRequestInQueue)?;
 
+            ink::env::debug_println!("Received request: {request:02x?}");
+
             let response = self.handle_request(request)?;
             // Attach an action to the tx by:
             client.action(Action::Reply(response.encode()));
@@ -402,7 +405,8 @@ mod lotto_draw {
                     // the number has not been drawn yet => we added it
                     numbers.push(number);
                 }
-                i += 1;
+                //i += 1;
+                i = i.checked_add(1).ok_or(ContractError::AddOverFlow)?;
             }
 
             info!("Numbers: {numbers:?}");
@@ -424,7 +428,8 @@ mod lotto_draw {
                 .ok_or(ContractError::SubOverFlow)?
                 .checked_add(1u128)
                 .ok_or(ContractError::AddOverFlow)?;
-            let b = (rand_u64 as u128) % a;
+            //let b = (rand_u64 as u128) % a;
+            let b = (rand_u64 as u128).checked_rem_euclid(a).ok_or(ContractError::DivByZero)?;
             let r = b
                 .checked_add(min as u128)
                 .ok_or(ContractError::AddOverFlow)?;
@@ -861,5 +866,69 @@ mod lotto_draw {
             let r = lotto.answer_request().expect("failed to answer request");
             ink::env::debug_println!("answer request: {r:?}");
         }
+
+
+        #[ink::test]
+        fn encode_response_numbers() {
+            let _ = env_logger::try_init();
+            pink_extension_runtime::mock_ext::mock_all_ext();
+
+            let lotto = init_contract();
+
+            //Request received for raffle 6 - draw 4 numbers between 1 and 50
+            // Numbers: [4, 49, 41, 16]
+
+            let raffle_id = 6;
+            let numbers = vec![4, 49, 41, 16];
+
+            let response = LottoResponseMessage {
+                request: LottoRequestMessage {raffle_id, request: Request::DrawNumbers(4, 1, 50)},
+                response: Response::Numbers(numbers.clone()),
+            };
+            let encoded_response = response.encode();
+            ink::env::debug_println!("Reply response numbers: {encoded_response:02x?}");
+
+            let response = LottoResponseMessage {
+                request: LottoRequestMessage {raffle_id, request: Request::CheckWinners(numbers)},
+                response: Response::Winners(vec![]),
+            };
+            let encoded_response = response.encode();
+            ink::env::debug_println!("Reply response winners: {encoded_response:02x?}");
+
+        }
+
+
+        #[ink::test]
+        fn encode_keys() {
+
+            const QUEUE_PREFIX : &[u8] = b"q/";
+
+            const QUEUE_HEAD_KEY : &[u8] = b"_head";
+            let head_key = [QUEUE_PREFIX, QUEUE_HEAD_KEY].concat();
+            ink::env::debug_println!("queue head key: {head_key:02x?}");
+
+            const QUEUE_TAIL_KEY : &[u8] = b"_tail";
+            let tail_key = [QUEUE_PREFIX, QUEUE_TAIL_KEY].concat();
+            ink::env::debug_println!("queue tail key: {tail_key:02x?}");
+
+            let id: u32 = 11;
+            let key = [QUEUE_PREFIX, &id.encode()].concat();
+            ink::env::debug_println!("queue key: {key:02x?}");
+
+        }
+
+        #[ink::test]
+        fn decode_message() {
+            let encoded_message : Vec<u8> = hex::decode("0600000001100400310029001000").expect("hex decode failed");
+            let message = LottoRequestMessage::decode(&mut encoded_message.as_slice());
+            ink::env::debug_println!("message: {message:?}");
+
+            let encoded_message : Vec<u8> = hex::decode("07000000000401003200").expect("hex decode failed");
+            let message = LottoRequestMessage::decode(&mut encoded_message.as_slice());
+            ink::env::debug_println!("message: {message:?}");
+
+        }
+
+
     }
 }
